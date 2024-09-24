@@ -1,4 +1,4 @@
-// src/components/Signup.js
+// src/pages/Signup.js
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -41,9 +41,9 @@ function Signup() {
       const{ token } = jwtResponse.data;
       console.log(token); 
 
-      document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
+      // document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
       
-      // localStorage.setItem('marketpulsetoken', token);
+      localStorage.setItem('marketpulsetoken', token);
       //redirect to home page
       window.location.href = "http://localhost:3000/";
     } catch (error) {
@@ -66,7 +66,7 @@ function Signup() {
 ///////////////////////////////////////////////// use cookie or local storage
       // document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
       localStorage.setItem('marketpulsetoken', token);
-      // window.location.href = "http://localhost:3000/";
+      window.location.href = "http://localhost:3000/";
     } catch (error) {
       console.error('Error signing up with Google:', error);
     }
@@ -138,7 +138,7 @@ function Signup() {
                 Sign in with Google
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account? <a href="http://login.localhost:3000/" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</a>
+                Already have an account? <a href="http://localhost:3000/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</a>
               </p>
             </div>
           </div>

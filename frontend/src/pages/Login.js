@@ -1,13 +1,13 @@
-// src/components/Login.js
+// src/pages/Login.js
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import axios from 'axios';
 import { auth } from '../firebase';
 
 
 function Login() {
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const siteId = queryParams.get('siteid');
@@ -18,32 +18,28 @@ function Login() {
   const signInUrl = queryParams.get('signInUrl');
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const {name, value} = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/register', {
+      const jwtResponse = await axios.post('http://localhost:5000/api/auth/login', {
         idToken: idToken,
-        username: formData.username,
-  
+
       });
       const{ token } = jwtResponse.data;
       console.log(token); 
+      console.log(jwtResponse);
 
-      document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
+      // document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
       
-      // localStorage.setItem('marketpulsetoken', token);
+      localStorage.setItem('marketpulsetoken', token);
       //redirect to home page
       window.location.href = "http://localhost:3000/";
     } catch (error) {
@@ -51,21 +47,21 @@ function Login() {
     }
   };
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/register', {
+      const jwtResponse = await axios.post('http://localhost:5000/api/auth/login', {
         idToken: idToken,
-        username: user.displayName,
+
       });
       const{ token } = jwtResponse.data;
       console.log(token); 
 /////////////////////////////////////////////////
-      document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
-      // localStorage.setItem('marketpulsetoken', token);
+      // document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
+      localStorage.setItem('marketpulsetoken', token);
       window.location.href = "http://localhost:3000/";
     } catch (error) {
       console.error('Error signing up with Google:', error);
@@ -108,7 +104,7 @@ function Login() {
                   Login
                 </button>
               </form>
-              <button onClick={handleGoogleSignup} type="button" className="w-full text-white bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none
+              <button onClick={handleGoogleLogin} type="button" className="w-full text-white bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none
                  focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center
                   dark:focus:ring-[#4285F4]/55 me-2 mb-2">
                 <svg className="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 19">
@@ -116,6 +112,9 @@ function Login() {
                 </svg>
                 Login in with Google
               </button>
+              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                Don't have an account yet? <a href="http://localhost:3000/signup" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</a>
+              </p>
             </div>
           </div>
         </div>
