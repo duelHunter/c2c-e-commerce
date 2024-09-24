@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const admin = require('../config/firebase');
 const dotenv = require('dotenv');
 const asyncHandler = require('express-async-handler');
+const validateMongoDbId = require('../utils/validateMongodbId');
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -65,8 +66,8 @@ exports.loginUser = async (req, res) => {
 let blacklist = new Set();
 
 exports.logoutUser = asyncHandler(async (req, res) => {
-    // Extract token from cookies======////req.cookies.marketpulsetoken || 
-    const token = req.headers.authorization?.split(' ')[1];
+
+    const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '');
     // const token = req.cookies.marketpulsetoken;
     console.log(`Token received for logout: ${token}`);
 
@@ -78,9 +79,6 @@ exports.logoutUser = asyncHandler(async (req, res) => {
             // Add token to blacklist
             blacklist.add(token);
 
-            // Optionally, expire the token immediately by setting an expiration date in the past
-            res.cookie('marketpulsetoken', '', { expires: new Date(0), path: '/' });
-
             res.status(200).json({ message: 'Logged out successfully' });
         } catch (error) {
             console.error('Error in logoutUser:', error);
@@ -90,3 +88,46 @@ exports.logoutUser = asyncHandler(async (req, res) => {
         res.status(400).json({ message: 'Token is missing' });
     }
 });
+
+
+//=======================================================get profile details
+exports.getProfileDetails = asyncHandler(async (req, res, next) => {
+    const { id } = req.user;
+    console.log(id);
+    //calling to a util function
+    validateMongoDbId(id);
+  
+    try {
+      const userDetails = await User.findById(id);
+      res.json(userDetails);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+
+//======================================================update Profile Details
+exports.updateProfileDetails = asyncHandler(async (req, res, next) => {
+  console.log(req.body);
+    const { id } = req.user;
+    validateMongoDbId(id);
+  
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        {
+          email: req?.body?.email,
+          username: req?.body?.username,
+          address: req?.body?.address,
+          mobileNo: req?.body?.mobileNo,
+          cart: req?.body?.cart,
+
+        },
+        {
+          new: true,
+        }
+      ).select("-firebaseUID -cart");//dont return sensitive data to frontend
+      res.json(updatedUser);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
