@@ -6,11 +6,12 @@ import CartPage from './pages/CartPage';
 import Profile from './pages/Profile';
 import Signup from './pages/SignUp';
 import Login from './pages/Login'; 
-
+import MyStore from './pages/MyStore';
 // import About from './pages/About'; 
 // import Contact from './pages/Contact';
 import HeaderFooterLayout from './components/HeaderFooterLayout';
 import EmptyLayout from './components/EmptyLayout';
+
 
 const App = () => {
   return (
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           {/* <Route path="/contact" element={<Contact />} /> */}
           <Route path="/cart" element={<CartPage />} />
+          <Route path='/mystore' element={ <MyStore/>} />
         </Route>
 
       </Routes>

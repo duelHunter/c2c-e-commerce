@@ -85,7 +85,7 @@ function Header() {
           <div className="w-1/4 flex justify-between">
             <Link className="flex items-center">
               <img src={acc} alt="Compare" className="w-6 h-6 mr-2" />
-              <p>Compare <br /> Products</p>
+              <p>My Store</p>
             </Link>
             <Link className="flex items-center">
               <img src={wishlist} alt="Wishlist" className="w-6 h-6 mr-2" />
