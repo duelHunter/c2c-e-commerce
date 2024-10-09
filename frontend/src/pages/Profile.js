@@ -19,7 +19,7 @@ function Profile() {
       try {
         const token = localStorage.getItem("marketpulsetoken");
         const response = await axios.get(
-          "http://localhost:5000/api/auth/profile",
+          `${process.env.REACT_APP_BACKEND_API_URL}/auth/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -60,7 +60,7 @@ function Profile() {
     try {
       const token = localStorage.getItem("marketpulsetoken");
       const tester = await axios.put(
-        "http://127.0.0.1:5000/api/auth/updateProfileDetails",
+        `${process.env.REACT_APP_BACKEND_API_URL}/auth/updateProfileDetails`,
         {
           //payload
           [section]: formData[section],
@@ -88,7 +88,7 @@ function Profile() {
     try {
       const token = localStorage.getItem("marketpulsetoken");
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        `${process.env.REACT_APP_BACKEND_API_URL}/auth/logout`,
         {},
         {
           headers: {

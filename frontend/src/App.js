@@ -12,7 +12,6 @@ import MyStore from './pages/MyStore';
 import HeaderFooterLayout from './components/HeaderFooterLayout';
 import EmptyLayout from './components/EmptyLayout';
 
-
 const App = () => {
   return (
     <Router>

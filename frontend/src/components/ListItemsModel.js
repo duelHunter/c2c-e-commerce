@@ -11,7 +11,7 @@ function ListItemsModel() {
     //get the product categories(heirarchical category data)
     if(modalNumber==1){
       const token = localStorage.getItem("marketpulsetoken");
-      const result = axios.get("http://localhost:5000/api/product/getCat")
+      const result = axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
       .then((response) => {
         console.log("Category: ", response);
       })

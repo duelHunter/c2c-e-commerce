@@ -5,7 +5,6 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } f
 import axios from 'axios';
 import { auth } from '../firebase';
 
-
 function Signup() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const location = useLocation();
@@ -33,7 +32,7 @@ function Signup() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/register', {
+      const jwtResponse = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/register`, {
         idToken: idToken,
         username: formData.username,
   
@@ -45,7 +44,8 @@ function Signup() {
       
       localStorage.setItem('marketpulsetoken', token);
       //redirect to home page
-      window.location.href = "http://localhost:3000/";
+      window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
+
     } catch (error) {
       console.error('Error signing up:', error);
     }
@@ -57,7 +57,7 @@ function Signup() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/register', {
+      const jwtResponse = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/register`, {
         idToken: idToken,
         username: user.displayName,
       });
@@ -66,7 +66,7 @@ function Signup() {
 ///////////////////////////////////////////////// use cookie or local storage
       // document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
       localStorage.setItem('marketpulsetoken', token);
-      window.location.href = "http://localhost:3000/";
+      window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
     } catch (error) {
       console.error('Error signing up with Google:', error);
     }
@@ -138,7 +138,7 @@ function Signup() {
                 Sign in with Google
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account? <a href="http://localhost:3000/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</a>
+                Already have an account? <a href= {process.env.REACT_APP_FRONTEND_URL + "/login"} className="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</a>
               </p>
             </div>
           </div>

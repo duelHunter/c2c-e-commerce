@@ -17,7 +17,7 @@ function Header() {
 
       if (token) {
         try {
-          const response = await axios.post('http://localhost:5000/api/auth/isLogedin', {}, {
+          const response = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/isLogedin`, {}, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -91,7 +91,7 @@ function Header() {
               <img src={wishlist} alt="Wishlist" className="w-6 h-6 mr-2" />
               <p>Favourite <br /> Wishlist</p>
             </Link>
-            <a className="flex items-center" href={isLoggedIn ? "http://localhost:3000/profile" : "http://localhost:3000/signup"}>
+            <a className="flex items-center" href={isLoggedIn ? `${process.env.REACT_APP_FRONTEND_URL}/profile` : `${process.env.REACT_APP_FRONTEND_URL}/signup`}>
               <img src={user} alt="User" className="w-6 h-6 mr-2" />
               <p>{isLoggedIn ? "My Account" : "Sign Up"}</p>
             </a>  

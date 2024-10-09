@@ -29,19 +29,19 @@ function Login() {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/login', {
+      const jwtResponse = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/login`, {
         idToken: idToken,
 
       });
       const{ token } = jwtResponse.data;
       console.log(token); 
-      console.log(jwtResponse);
+      console.log(jwtResponse); 
 
       // document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
       
       localStorage.setItem('marketpulsetoken', token);
       //redirect to home page
-      window.location.href = "http://localhost:3000/";
+      window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
     } catch (error) {
       console.error('Error signing up:', error);
     }
@@ -53,7 +53,7 @@ function Login() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const idToken = await user.getIdToken();
-      const jwtResponse = await axios.post('http://localhost:5000/api/auth/login', {
+      const jwtResponse = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/login`, {
         idToken: idToken,
 
       });
@@ -62,7 +62,7 @@ function Login() {
 /////////////////////////////////////////////////
       // document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
       localStorage.setItem('marketpulsetoken', token);
-      window.location.href = "http://localhost:3000/";
+      window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
     } catch (error) {
       console.error('Error signing up with Google:', error);
     }
@@ -113,7 +113,7 @@ function Login() {
                 Login in with Google
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Don't have an account yet? <a href="http://localhost:3000/signup" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</a>
+                Don't have an account yet? <a href={ process.env.REACT_APP_FRONTEND_URL + "/signup"} className="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</a>
               </p>
             </div>
           </div>
