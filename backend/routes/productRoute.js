@@ -3,7 +3,7 @@
   const { createCategories, getCategories } = require('../controllers/categoryCreater');
   const authenticateToken = require('../middlewares/auth');
   
-  router.get("/createCat", createCategories);
+  router.post("/createCat", createCategories);
   router.get("/getCat", getCategories);
   
   module.exports = router;

@@ -5,19 +5,56 @@ import axios from "axios";
 function ListItemsModel() {
   // State to manage which modal is open
   const [currentModal, setCurrentModal] = useState(0); // 0: none, 1: first, 2: second, 3: third
+  const [categories, setCategories] = useState([
+    { value: "TV", label: "TV/Monitors" },
+    { value: "PC", label: "PC" },
+    { value: "GA", label: "Gaming/Console" },
+    { value: "PH", label: "Phones" },
+  ]);
+
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [subcategories, setSubcategories] = useState([]);
+
+    // Function to handle category selection and fetch subcategories
+    const handleCategoryChange = (e) => {
+      const selectedValue = e.target.value;
+      setSelectedCategory(selectedValue);
+  
+      axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${selectedValue}`)
+        .then((response) => {
+          const fetchedSubcategories = response.data.subcategories;
+          const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+            value: subcategory.id,
+            label: subcategory.name,
+          }));
+          setSubcategories(subcategoryOptions);
+        })
+        .catch((err) => {
+          console.error("Error fetching subcategories", err);
+        });
+    };
 
   // Handle opening modals
   const openModal = (modalNumber) => {
     //get the product categories(heirarchical category data)
-    if(modalNumber==1){
+    if (modalNumber == 1) {
       const token = localStorage.getItem("marketpulsetoken");
-      const result = axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
-      .then((response) => {
-        console.log("Category: ", response);
-      })
-      .catch((err) => {
-        console.error("Error fetching profile data", err);
-      });
+      const result = axios
+        .get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
+        .then((response) => {
+          const fetchedCategories = response.data.categories;
+                    // Assuming fetchedCategories is in the format: { "1": "Electronics", "2": "Mobile phones", ... }
+                    const categoryOptions = fetchedCategories.map((category, key) => ({
+                      value: category._id,
+                      label: category.name,
+                    }));
+            
+                    // Update categories state with new options
+                    setCategories(categoryOptions);
+        })
+        .catch((err) => {
+          console.error("Error fetching profile data", err);
+        });
     }
     setCurrentModal(modalNumber);
   };
@@ -88,15 +125,17 @@ function ListItemsModel() {
                     </label>
                     <select
                       id="product-category"
+                      onChange={handleCategoryChange}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                         dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     >
                       <option value="">Select category</option>
-                      <option value="TV">TV/Monitors</option>
-                      <option value="PC">PC</option>
-                      <option value="GA">Gaming/Console</option>
-                      <option value="PH">Phones</option>
+                      {categories.map((category, index) => (
+                        <option key={index} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
