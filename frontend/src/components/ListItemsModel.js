@@ -50,11 +50,17 @@ function ListItemsModel() {
       formData.append("images", productImages[i]);
     }
 
-    axios
-      .post(
-        `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`,
-        formData
-      )
+    const token = localStorage.getItem("marketpulsetoken");
+    axios.post(
+      `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`,
+      formData,  
+      {
+        headers: {
+           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
       .then((response) => {
         console.log("Product listed successfully", response);
         // Close modals or show a success message

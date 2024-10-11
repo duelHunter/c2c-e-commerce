@@ -4,26 +4,25 @@ const path = require('path');
 const multer = require("multer");
 
 // Set up multer storage to save files locally on disk
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../uploads"); // Define where to store images (make sure it's one level up)
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true }); // Create folder if it doesn't exist
-    }
-    cb(null, uploadPath); // Save in the 'uploads' folder
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Save file with a unique name
-  },
-});
-const upload = multer({ storage: storage });
+exports.storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(__dirname, "../uploads"); // One level up
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true }); // Create folder if it doesn't exist
+      }
+      cb(null, uploadPath); // Save in the 'uploads' folder one level up
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + path.extname(file.originalname)); // Save file with a unique name
+    },
+  });
 
 ////////////////create new product function
 exports.createProduct = async (req, res) => {
   try {
-    const { title, description, price, category, quantity, tags, sellerId } = req.body;
-
-    console.log(title, description, price, category, quantity, tags, sellerId);
+    const { title, description, price, category, quantity } = req.body;
+    const sellerId = req.user.id;
+    console.log(title, description, price, category, quantity);
 
     const files = req.files; // Get uploaded files (images)
     console.log("files are ", files);
@@ -47,7 +46,6 @@ exports.createProduct = async (req, res) => {
       category,
       quantity,
       images: imagesArray, // Save image paths to the product
-      tags,
       sellerId,
     });
 
