@@ -15,21 +15,32 @@ function ListItemsModel() {
   const [subcategories, setSubcategories] = useState([]);
 
   //store the form data to variables
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [productName, setProductName] = useState("");
+  const [productTitle, setProductTitle] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [productImages, setProductImages] = useState([]);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setProductImages(files);
+
+    // Create image preview URLs
+    const imageURLs = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(imageURLs);
+    console.log(imageURLs);
+  };
 
   const handleSubmit = () => {
     const formData = new FormData();
     formData.append("category", selectedCategory);
     formData.append("subcategory", selectedSubcategory);
     formData.append("brand", selectedBrand);
-    formData.append("name", productName);
+    formData.append("title", productTitle);
     formData.append("description", productDescription);
     formData.append("quantity", quantity);
     formData.append("price", price);
@@ -38,16 +49,19 @@ function ListItemsModel() {
     for (let i = 0; i < productImages.length; i++) {
       formData.append("images", productImages[i]);
     }
-    
-    axios.post(
-      `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`, formData)
-    .then((response) => {
-      console.log("Product listed successfully", response);
-      // Close modals or show a success message
-    })
-    .catch((error) => {
-      console.error("Error listing product", error);
-    });
+
+    axios
+      .post(
+        `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`,
+        formData
+      )
+      .then((response) => {
+        console.log("Product listed successfully", response);
+        // Close modals or show a success message
+      })
+      .catch((error) => {
+        console.error("Error listing product", error);
+      });
   };
 
   // Function to handle category selection and fetch subcategories
@@ -76,10 +90,9 @@ function ListItemsModel() {
   // Handle opening modals
   const openModal = (modalNumber) => {
     //get the product categories(heirarchical category data)
-    if (modalNumber == 1) {
-      const token = localStorage.getItem("marketpulsetoken");
-      const result = axios
-        .get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
+    if (modalNumber === 1) {
+      localStorage.getItem("marketpulsetoken");
+      axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
         .then((response) => {
           const fetchedCategories = response.data.categories;
           // Assuming fetchedCategories is in the format: { "1": "Electronics", "2": "Mobile phones", ... }
@@ -283,7 +296,7 @@ function ListItemsModel() {
                       type="text"
                       name="name"
                       id="name"
-                      onChange={(e) => setProductName(e.target.value)}
+                      onChange={(e) => setProductTitle(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
              focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
              dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -309,7 +322,7 @@ function ListItemsModel() {
                     ></textarea>
                   </div>
                   {/* Image drop zone */}
-                  <div className="flex items-center justify-center w-full">
+                  <div className="flex items-center justify-center w-full flex-col">
                     <label
                       htmlFor="dropzone-file"
                       className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed 
@@ -342,11 +355,24 @@ function ListItemsModel() {
                       </div>
                       <input
                         id="dropzone-file"
-                        onChange={(e) => setProductImages(e.target.value)}
+                        multiple
+                        onChange={handleImageChange}
                         type="file"
                         className="hidden"
                       />
                     </label>
+
+                    {/* Preview of selected images */}
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      {imagePreviews.map((imageURL, index) => (
+                        <img
+                          key={index}
+                          src={imageURL}
+                          alt={`Preview ${index}`}
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-between mt-6">
