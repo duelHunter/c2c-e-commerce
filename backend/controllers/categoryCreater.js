@@ -75,16 +75,17 @@ exports.getCategories = async (req, res) => {
 };
 
 // The controller to send predefined sub-categories to the frontend
-exports.getCategories = async (req, res) => {
+exports.getSubCategories = async (req, res) => {
   try {
-    const parentCatId = req.body;
+    const parentCatId = req.query.category;
+    console.log(parentCatId);
     // Fetch all categories from the database
-    const categories = await Category.find({parentCategory: null}).select("name slug");
+    const subCategories = await Category.find({parentCategory: parentCatId}).select("name slug");
 
     // Respond with the fetched categories
     res.status(200).json({
       message: "Categories fetched successfully",
-      categories, // Return the list of categories
+      subCategories, // Return the list of categories
     });
 
   } catch (error) {
@@ -92,3 +93,23 @@ exports.getCategories = async (req, res) => {
     res.status(500).json({ message: "Error fetching categories", error: error.message });
   }
 };
+
+// The controller to send predefined brands to the frontend
+// exports.getBrands = async (req, res) => {
+//   try {
+//     const parentCatId = req.query.category;
+//     console.log(parentCatId);
+//     // Fetch all categories from the database
+//     const subBrands = await Category.find({parentCategory: parentCatId}).select("name slug");
+
+//     // Respond with the fetched categories
+//     res.status(200).json({
+//       message: "Categories fetched successfully",
+//       subBrands, // Return the list of categories
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching categories:", error);
+//     res.status(500).json({ message: "Error fetching categories", error: error.message });
+//   }
+// };

@@ -12,27 +12,66 @@ function ListItemsModel() {
     { value: "PH", label: "Phones" },
   ]);
 
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [subcategories, setSubcategories] = useState([]);
 
-    // Function to handle category selection and fetch subcategories
-    const handleCategoryChange = (e) => {
-      const selectedValue = e.target.value;
-      setSelectedCategory(selectedValue);
-  
-      axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${selectedValue}`)
-        .then((response) => {
-          const fetchedSubcategories = response.data.subcategories;
-          const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
-            value: subcategory.id,
-            label: subcategory.name,
-          }));
-          setSubcategories(subcategoryOptions);
-        })
-        .catch((err) => {
-          console.error("Error fetching subcategories", err);
-        });
-    };
+  //store the form data to variables
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [productName, setProductName] = useState("");
+  const [productDescription, setProductDescription] = useState("");
+  const [productImages, setProductImages] = useState([]);
+  const [quantity, setQuantity] = useState("");
+  const [price, setPrice] = useState("");
+
+  const handleSubmit = () => {
+    const formData = new FormData();
+    formData.append("category", selectedCategory);
+    formData.append("subcategory", selectedSubcategory);
+    formData.append("brand", selectedBrand);
+    formData.append("name", productName);
+    formData.append("description", productDescription);
+    formData.append("quantity", quantity);
+    formData.append("price", price);
+
+    // Assuming multiple images are selected
+    for (let i = 0; i < productImages.length; i++) {
+      formData.append("images", productImages[i]);
+    }
+    
+    axios.post(
+      `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`, formData)
+    .then((response) => {
+      console.log("Product listed successfully", response);
+      // Close modals or show a success message
+    })
+    .catch((error) => {
+      console.error("Error listing product", error);
+    });
+  };
+
+  // Function to handle category selection and fetch subcategories
+  const handleCategoryChange = (e) => {
+    const selectedValue = e.target.value;
+    setSelectedCategory(selectedValue);
+
+    axios
+      .get(
+        `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${selectedValue}`
+      )
+      .then((response) => {
+        const fetchedSubcategories = response.data.subCategories;
+        console.log(fetchedSubcategories);
+        const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+          value: subcategory._id,
+          label: subcategory.name,
+        }));
+        setSubcategories(subcategoryOptions);
+      })
+      .catch((err) => {
+        console.error("Error fetching subcategories", err);
+      });
+  };
 
   // Handle opening modals
   const openModal = (modalNumber) => {
@@ -43,14 +82,14 @@ function ListItemsModel() {
         .get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
         .then((response) => {
           const fetchedCategories = response.data.categories;
-                    // Assuming fetchedCategories is in the format: { "1": "Electronics", "2": "Mobile phones", ... }
-                    const categoryOptions = fetchedCategories.map((category, key) => ({
-                      value: category._id,
-                      label: category.name,
-                    }));
-            
-                    // Update categories state with new options
-                    setCategories(categoryOptions);
+          // Assuming fetchedCategories is in the format: { "1": "Electronics", "2": "Mobile phones", ... }
+          const categoryOptions = fetchedCategories.map((category, key) => ({
+            value: category._id,
+            label: category.name,
+          }));
+
+          // Update categories state with new options
+          setCategories(categoryOptions);
         })
         .catch((err) => {
           console.error("Error fetching profile data", err);
@@ -63,6 +102,7 @@ function ListItemsModel() {
   const closeModal = () => {
     setCurrentModal(0);
   };
+
   return (
     <div>
       <div className="flex justify-center items-center flex-col text-center mt-10 min-h-72">
@@ -147,11 +187,17 @@ function ListItemsModel() {
                     </label>
                     <select
                       id="product-subcategory"
+                      onChange={(e) => setSelectedSubcategory(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                         dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     >
                       <option value="">Select subcategory</option>
+                      {subcategories.map((subcategory, index) => (
+                        <option key={index} value={subcategory.value}>
+                          {subcategory.label}
+                        </option>
+                      ))}
                       {/* Add subcategories based on the selected category */}
                     </select>
                   </div>
@@ -164,6 +210,7 @@ function ListItemsModel() {
                     </label>
                     <select
                       id="product-brand"
+                      onChange={(e) => setSelectedBrand(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                         dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -236,6 +283,7 @@ function ListItemsModel() {
                       type="text"
                       name="name"
                       id="name"
+                      onChange={(e) => setProductName(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
              focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
              dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -252,6 +300,7 @@ function ListItemsModel() {
                     </label>
                     <textarea
                       id="description"
+                      onChange={(e) => setProductDescription(e.target.value)}
                       rows="3"
                       className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
              focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500
@@ -293,6 +342,7 @@ function ListItemsModel() {
                       </div>
                       <input
                         id="dropzone-file"
+                        onChange={(e) => setProductImages(e.target.value)}
                         type="file"
                         className="hidden"
                       />
@@ -379,6 +429,7 @@ function ListItemsModel() {
                         type="text"
                         name="name"
                         id="name"
+                        onChange={(e) => setQuantity(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
                   focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                    dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -397,6 +448,7 @@ function ListItemsModel() {
                         type="number"
                         name="price"
                         id="price"
+                        onChange={(e) => setPrice(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
                   focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                    dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -415,6 +467,7 @@ function ListItemsModel() {
                     </button>
                     <button
                       type="button"
+                      onClick={handleSubmit}
                       className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                     >
                       List item
