@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { BsSearch } from "react-icons/bs";
 import axios from "axios";  
+//change this
 import acc from "../images/compare.svg";
 import wishlist from "../images/wishlist.svg";
 import user from "../images/user.svg";
@@ -43,8 +44,8 @@ function Header() {
   }, []);
 
   return (
-    <>
-      <header className="bg-gray-800 text-white py-3">
+    <div>
+      <header className="bg-gray-800 text-white py-3 px-4 md:px-8 lg:px-16">
         <div className="container mx-auto flex justify-between">
           <div>
             <p className="mb-0">Free shipping over Rs.500 & Free Shipping</p>
@@ -60,7 +61,7 @@ function Header() {
         </div>
       </header>
       {/* Second header */}
-      <header className="bg-gray-900 text-white py-3">
+      <header className="bg-gray-900 text-white py-3 px-4 md:px-8 lg:px-16">
         <div className="container mx-auto flex items-center justify-between">
           <div className="w-1/6 text-center">
             <h3 className="text-xl">
@@ -83,7 +84,7 @@ function Header() {
             </div>
           </div>
           <div className="w-1/4 flex justify-between">
-            <Link className="flex items-center">
+            <Link className="flex items-center" to={"/mystore"}>
               <img src={acc} alt="Compare" className="w-6 h-6 mr-2" />
               <p>My Store</p>
             </Link>
@@ -105,7 +106,7 @@ function Header() {
         </div>
       </header>
       {/* Third header */}
-      <header className="bg-gray-800 text-white py-3">
+      <header className="bg-gray-800 text-white py-3 px-4 md:px-8 lg:px-16">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div>
@@ -130,7 +131,7 @@ function Header() {
           </div>
         </div>
       </header>
-    </>
+    </div>
   );
 }
 

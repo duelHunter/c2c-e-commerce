@@ -6,7 +6,7 @@ import { FaLinkedin, FaTwitter, FaInstagram, FaGithub } from "react-icons/fa";
 function Footer() {
   return (
     <>
-      <footer className="py-8 bg-gray-800 text-white">
+      <footer className="py-8 bg-gray-800 text-white px-4 md:px-8 lg:px-16">
         <div className="container mx-auto flex flex-wrap items-center">
           <div className="w-full md:w-1/2 flex items-center mb-4 md:mb-0">
             <img src={newsLetter} alt="Newsletter" className="mr-4" />
@@ -27,7 +27,7 @@ function Footer() {
           </div>
         </div>
       </footer>
-      <footer className="py-8 bg-gray-900 text-white">
+      <footer className="py-8 bg-gray-900 text-white px-4 md:px-8 lg:px-16">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <h4 className="text-xl mb-4">Contact Us</h4>
@@ -100,7 +100,7 @@ function Footer() {
           </div>
         </div>
       </footer>
-      <footer className="py-4 bg-gray-900 text-white">
+      <footer className="py-4 bg-gray-900 text-white px-4 md:px-8 lg:px-16">
         <div className="container mx-auto text-center">
           <p className="mb-0">&copy; {new Date().getFullYear()} Powered by Market Pulse</p>
         </div>
