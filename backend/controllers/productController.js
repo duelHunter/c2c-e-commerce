@@ -61,3 +61,62 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ message: "Error creating products", error: error.message });
   }
 };
+
+
+// Get all product details for the home page cards using product-id
+exports.getAllProducts = async (req, res) => {
+    try {
+      // Fetch all products from the database
+      const products = await Product.find();
+  
+      // If no products found, return a message
+      if (!products || products.length === 0) {
+        return res.status(404).json({
+          message: "No products found",
+        });
+      }
+  
+      // Return the products in the response
+      res.status(200).json({
+        message: "Products fetched successfully",
+        products,
+      });
+    } catch (error) {
+      console.error("Error fetching products: ", error);
+      res.status(500).json({
+        message: "Error fetching products",
+        error: error.message,
+      });
+    }
+  };
+
+  //get selected product data for products pages
+  //use id to find product
+  exports.getSelectedProduct = async (req, res) => {
+    try {
+      // Get the product ID from request parameters
+      const productId = req.params.id;
+  
+      // Find the product by ID
+      const selectedProduct = await Product.findById(productId);
+  
+      // If the product is not found, return a message
+      if (!selectedProduct) {
+        return res.status(404).json({
+          message: "Product not found",
+        });
+      }
+  
+      // Return the selected product in the response
+      res.status(200).json({
+        message: "Product fetched successfully",
+        product: selectedProduct,
+      });
+    } catch (error) {
+      console.error("Error fetching product: ", error);
+      res.status(500).json({
+        message: "Error fetching product",
+        error: error.message,
+      });
+    }
+  };

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import mainBanner from "../images/main-banner-1.jpg";
 import catBanner from "../images/catbanner-01.jpg";
@@ -34,66 +35,35 @@ import speaker from "../images/subbanner-04.webp";
 import ProductCard from "../components/ProductCard";
 // import Meta from "../components/Meta";
 function HomePage() {
-  // Array of product data
-  const products = [
-    {
-      id: 1,
-      productName: 'iMac 2024',
-      price: 2999.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/imac-front.svg',
-      discount: '35%',
-    },
-    {
-      id: 2,
-      productName: 'MacBook Pro',
-      price: 1999.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/macbook-pro.svg',
-      discount: '20%',
-    },
-    // Add 6 more products similarly
-    {
-      id: 3,
-      productName: 'iPhone 14',
-      price: 999.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/iphone.svg',
-      discount: '10%',
-    },
-    {
-      id: 4,
-      productName: 'Apple Watch',
-      price: 399.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/apple-watch.svg',
-      discount: '15%',
-    },
-    {
-      id: 5,
-      productName: 'AirPods Pro',
-      price: 249.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/airpods.svg',
-      discount: null,
-    },
-    {
-      id: 6,
-      productName: 'iPad Pro',
-      price: 1099.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/ipad.svg',
-      discount: '25%',
-    },
-    {
-      id: 7,
-      productName: 'HomePod',
-      price: 299.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/homepod.svg',
-      discount: null,
-    },
-    {
-      id: 8,
-      productName: 'Apple TV 4K',
-      price: 179.99,
-      imageSrc: 'https://flowbite.s3.amazonaws.com/blocks/e-commerce/apple-tv.svg',
-      discount: '5%',
-    },
-  ];
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+   // Fetch products from the backend
+   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getAllproducts`); 
+        setProducts(response.data.products);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load products");
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-8 lg:px-16">
@@ -101,11 +71,11 @@ function HomePage() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
         {products.map((product) => (
           <ProductCard
-            id={product.id}
-            productName={product.productName}
+            id={product._id}
+            productName={product.title}
             price={product.price}
-            imageSrc={product.imageSrc}
-            discount={product.discount}
+            imageSrc={product.images[3].url}
+            discount='35%'
           />
         ))}
       </div>

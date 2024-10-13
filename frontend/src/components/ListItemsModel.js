@@ -16,7 +16,7 @@ function ListItemsModel() {
 
   //store the form data to variables
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  // const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [productTitle, setProductTitle] = useState("");
@@ -37,8 +37,8 @@ function ListItemsModel() {
 
   const handleSubmit = () => {
     const formData = new FormData();
-    formData.append("category", selectedCategory);
-    formData.append("subcategory", selectedSubcategory);
+    // formData.append("category", selectedCategory);
+    formData.append("category", selectedSubcategory);
     formData.append("brand", selectedBrand);
     formData.append("title", productTitle);
     formData.append("description", productDescription);
@@ -73,7 +73,7 @@ function ListItemsModel() {
   // Function to handle category selection and fetch subcategories
   const handleCategoryChange = (e) => {
     const selectedValue = e.target.value;
-    setSelectedCategory(selectedValue);
+    // setSelectedCategory(selectedValue);
 
     axios
       .get(

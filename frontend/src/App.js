@@ -21,7 +21,7 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
         </Route>
-
+  
         {/* HeaderFooterLayout for pages with header and footer */}
         <Route path="/" element={<HeaderFooterLayout />}>
           <Route index element={<HomePage />} />

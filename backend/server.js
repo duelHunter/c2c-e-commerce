@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require("./config/db");
 const helmet = require('helmet');
+const path = require('path');
 
 dotenv.config(); 
 
@@ -29,6 +30,9 @@ app.use(express.json());
 
 //connect the mongodb connection
 connectDB();
+
+// Serve static files from the 'uploads' folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /// Routes///
 app.use('/api/auth',require('./routes/userRoute'));

@@ -11,7 +11,7 @@ function ProductPage() {
   useEffect(() => {
     const fetchProductData = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/product/createItem${productId}`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/product/${productId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch product data");
         }
