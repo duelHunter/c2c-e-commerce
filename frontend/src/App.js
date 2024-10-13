@@ -28,7 +28,7 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/mystore" element={ <MyStore /> } />
-          
+
           {/* Route for product page with dynamic productId */}
           <Route path="/product/:productId" element={<ProductPage />} />
         </Route>

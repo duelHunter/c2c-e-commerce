@@ -1,23 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-function ProductPage({ products }) {
+function ProductPage() {
   const { productId } = useParams(); // Get productId from URL
-  const product = products.find((p) => p.id === parseInt(productId)); // Find product by ID
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [quantity, setQuantity] = useState(1);
+/////////////////////////send request to backend using fetch api
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/product/createItem${productId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch product data");
+        }
+        const data = await response.json();
+        setProduct(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError(err.message || "Error fetching product");
+        setLoading(false);
+      }
+    };
+  
+    fetchProductData();
+  }, [productId]);
 
-  // Handler for adding product to the cart
-  const handleAddToCart = () => {
-    console.log(`Added ${quantity} of ${product.title} to cart`);
-    // Add your logic to add the product to the cart here
-  };
-
-  // Return null or some error message if the product is not found
-  if (!product) {
-    return <div>Product not found</div>;
-  }
-
+    // Handle loading and error states
+    // if (loading) return <div>Loading...</div>;
+    // if (error) return <div>Error: {error}</div>;
+  
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       {/* Product Image and Info */}
@@ -38,7 +52,7 @@ function ProductPage({ products }) {
           <p className="text-2xl font-semibold text-green-600 mb-6">${product.price}</p>
 
           {/* Quantity Selector */}
-          <div className="flex items-center mb-6">
+          {/* <div className="flex items-center mb-6">
             <label htmlFor="quantity" className="mr-4 font-medium">
               Quantity:
             </label>
@@ -50,15 +64,15 @@ function ProductPage({ products }) {
               min="1"
               className="w-16 p-2 border border-gray-300 rounded-md text-center"
             />
-          </div>
+          </div> */}
 
           {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
+          {/* <button
+            onClick={}
             className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-500"
           >
             Add to Cart
-          </button>
+          </button> */}
         </div>
       </div>
 
