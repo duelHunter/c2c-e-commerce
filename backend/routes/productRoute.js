@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { createCategories, getCategories, getSubCategories } = require("../controllers/categoryCreater");
-const { createProduct, getAllProducts } = require("../controllers/productController");
+const { createProduct, getAllProducts, getSelectedProduct } = require("../controllers/productController");
 const authenticateToken = require("../middlewares/auth");
 const multer = require("multer");
 
