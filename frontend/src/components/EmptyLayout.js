@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 
 function EmptyLayout() {
   return (
-    <div>
+    <div className='dark'>
         <Outlet />
     </div>
   )
