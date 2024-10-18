@@ -1,6 +1,5 @@
 // src/pages/Signup.js
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState } from "react";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -18,14 +17,6 @@ function Signup() {
     password: "",
     confirmPassword: "",
   });
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const siteId = queryParams.get("siteid");
-  const coPartnerId = queryParams.get("co_partnerId");
-  const usingSSL = queryParams.get("UsingSSL");
-  const rv4 = queryParams.get("rv4");
-  // const ru = queryParams.get('ru');
-  const signInUrl = queryParams.get("signInUrl");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -126,9 +117,6 @@ function Signup() {
     }
   };
 
-  useEffect(() => {
-    console.log({ siteId, coPartnerId, usingSSL, rv4, signInUrl });
-  }, [siteId, coPartnerId, usingSSL, rv4, signInUrl]);
 
   return (
     <div className="signup-container">
