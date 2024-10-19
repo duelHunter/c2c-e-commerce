@@ -96,7 +96,7 @@ function Header() {
               <img src={user} alt="User" className="w-6 h-6 mr-2" />
               <p>{isLoggedIn ? "My Account" : "Sign Up"}</p>
             </a>  
-            <Link className="flex items-center">
+            <Link to={'/cart'} className="flex items-center">
               <img src={cart} alt="Cart" className="w-6 h-6 mr-2" />
               <div className="flex flex-col">
                 <span className="bg-white text-black p-1 rounded-full">0</span>
