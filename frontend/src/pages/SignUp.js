@@ -36,6 +36,7 @@ function Signup() {
         formData.email,
         formData.password
       );
+
       const user = userCredential.user;
       await sendEmailVerification(user);
       window.alert("Verification email sent!...Please check your inbox.");
