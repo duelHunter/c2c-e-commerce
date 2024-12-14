@@ -1,114 +1,135 @@
 const Cart = require('../models/CartModel');
 const Product = require("../models/ProductModel");
 
-// Create a new cart or update an existing one
+
+// Add a single item to the cart
 exports.createCart = async (req, res) => {
-    try {
-        const { products, orderby } = req.body;
+  const { userId, productId, count } = req.body;
+  console.log(req.body);
 
-        // Validate input
-        if (!products || products.length === 0) {
-            return res.status(400).json({ error: "Products are required" });
-        }
+  try {
+    // Check if the cart exists for the user
+    let cart = await Cart.findOne({ orderby: userId });
 
-        if (!orderby) {
-            return res.status(400).json({ error: "Orderby (user ID) is required" });
-        }
-
-        // Check if the user already has a cart
-        let cart = await Cart.findOne({ orderby });
-
-        if (!cart) {
-            // Create a new cart
-            cart = new Cart({
-                products: [],
-                orderby,
-            });
-        } else {
-            // Reset the cart products (optional behavior)
-            cart.products = [];
-        }
-
-        let cartTotal = 0;
-
-        // Add products to the cart
-        for (const item of products) {
-            const { product, count } = item;
-
-            // Validate product existence
-            const productDetails = await Product.findById(product);
-            if (!productDetails) {
-                return res.status(404).json({ error: `Product with ID ${product} not found` });
-            }
-
-            // Add product to the cart
-            cart.products.push({
-                product: productDetails._id,
-                count,
-            });
-
-            // Calculate cart total (if needed)
-            cartTotal += productDetails.price * count;
-        }
-
-        // Optional: Add cart total to the schema (uncomment if using cartTotal field)
-        // cart.cartTotal = cartTotal;
-
-        // Save the cart
-        const savedCart = await cart.save();
-
-        res.status(201).json({
-            message: "Cart created/updated successfully",
-            cart: savedCart,
-        });
-    } catch (error) {
-        console.error("Error creating cart:", error);
-        res.status(500).json({ error: "Internal server error" });
+    if (!cart) {
+      // If cart doesn't exist, create a new one with the product
+      const newCart = new Cart({
+        orderby: userId,
+        products: [{ product: productId, count }]
+      });
+      await newCart.save();
+      return res.status(201).json({
+        success: true,
+        message: "Cart created with the item",
+        cart: newCart
+      });
     }
+
+    // If cart exists, check if the product is already in the cart
+    const productExists = cart.products.find(
+      (item) => item.product.toString() === productId
+    );
+
+    if (productExists) {
+      // If product exists, increment its quantity
+      productExists.count += count;
+    } else {
+      // Otherwise, add the product to the cart
+      cart.products.push({ product: productId, count });
+    }
+
+    await cart.save();
+    return res.status(200).json({
+      success: true,
+      message: "Item added to the cart",
+      cart
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while adding to the cart",
+      error: error.message
+    });
+  }
 };
 
+// Update quantity of a specific item in the cart (plus/minus buttons)
+exports.updateCartItem = async (req, res) => {
+  const { userId, productId, count } = req.body;
 
-// Remove a specific item from the cart
-exports.removeCartItem = async (req, res) => {
-    try {
-        const { userId, productId } = req.params;
-
-        // Validate userId and productId
-        if (!userId || !productId) {
-            return res.status(400).json({ success: false, message: "User ID and Product ID are required" });
-        }
-
-        // Find the user's cart
-        const cart = await Cart.findOne({ orderby: userId });
-        if (!cart) {
-            return res.status(404).json({ success: false, message: "Cart not found" });
-        }
-
-        // Remove the product from the cart
-        const productIndex = cart.products.findIndex(
-            (item) => item.product.toString() === productId
-        );
-
-        if (productIndex === -1) {
-            return res.status(404).json({ success: false, message: "Product not found in the cart" });
-        }
-
-        // Remove the product from the products array
-        cart.products.splice(productIndex, 1);
-
-        // Save the updated cart
-        await cart.save();
-
-        res.status(200).json({
-            success: true,
-            message: "Product removed from the cart successfully",
-            cart,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error removing item from cart",
-            error: error.message,
-        });
+  try {
+    const cart = await Cart.findOne({ orderby: userId });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found"
+      });
     }
+
+    // Find the product in the cart
+    const productIndex = cart.products.findIndex(
+      (item) => item.product.toString() === productId
+    );
+
+    if (productIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found in the cart"
+      });
+    }
+
+    // Update the count for the product
+    cart.products[productIndex].count = count;
+
+    // Remove the product if the count is 0
+    if (count <= 0) {
+      cart.products.splice(productIndex, 1);
+    }
+
+    await cart.save();
+    return res.status(200).json({
+      success: true,
+      message: "Cart item updated successfully",
+      cart
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the cart",
+      error: error.message
+    });
+  }
+};
+
+// Remove an item from the cart
+exports.removeCartItem = async (req, res) => {
+  const { userId, productId } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ orderby: userId });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found"
+      });
+    }
+
+    // Remove the product from the cart
+    cart.products = cart.products.filter(
+      (item) => item.product.toString() !== productId
+    );
+
+    await cart.save();
+    return res.status(200).json({
+      success: true,
+      message: "Item removed from the cart",
+      cart
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while removing the item from the cart",
+      error: error.message
+    });
+  }
 };

@@ -1,23 +1,63 @@
 // ProductCard.jsx
-import React from "react";
+import React, { useContext } from "react";
+import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
-const ProductCard = ({ id, productName, price, imageSrc, discount }) => {
+const ProductCard = ({
+  id,
+  productName,
+  price,
+  imageSrc,
+  discount
+}) => {
+  console.log("product id is, ", id);
+
+  //get userId using useContext
+  const { userId } = useContext(UserContext);
+  console.log("user id is (from useContext), ", userId);
+  // Function to handle Add to Cart
+  const handleAddToCart = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_API_URL}/cart/createCart`, 
+        {
+          userId: userId,
+          productId: id,
+          count: 1, 
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.status === 201 || response.status === 200) {
+        alert("Item added to cart successfully!");
+      } else {
+        alert("Failed to add item to cart.");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("An error occurred while adding the item to the cart.");
+    }
+  };
+
   return (
     <div>
       <Link to={`/product/${id}`}>
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="h-56 w-full">
-              <img
-                className="mx-auto h-full dark:hidden"
-                src={`${process.env.REACT_APP_UPLOADS}${imageSrc}`}
-                alt={productName}
-              />
-              <img
-                className="mx-auto hidden h-full dark:block"
-                src={imageSrc}
-                alt={productName}
-              />
+            <img
+              className="mx-auto h-full dark:hidden"
+              src={`${process.env.REACT_APP_UPLOADS}${imageSrc}`}
+              alt={productName}
+            />
+            <img
+              className="mx-auto hidden h-full dark:block"
+              src={imageSrc}
+              alt={productName}
+            />
           </div>
           <div className="pt-6">
             <div className="mb-4 flex items-center justify-between gap-4">
@@ -71,14 +111,20 @@ const ProductCard = ({ id, productName, price, imageSrc, discount }) => {
               </div>
             </div>
 
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {productName}
-              </h3>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Rs.{price}
-              </p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {productName}
+            </h3>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              Rs.{price}
+            </p>
 
-            <button className="mt-4 w-full rounded-lg bg-primary-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-500 dark:hover:bg-primary-600 dark:focus:ring-primary-800">
+            <button
+              className="mt-4 w-full rounded-lg bg-primary-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-500 dark:hover:bg-primary-600 dark:focus:ring-primary-800"
+              onClick={(e) => {
+                e.preventDefault();
+                handleAddToCart();
+              }}
+            >
               Add to cart
             </button>
           </div>

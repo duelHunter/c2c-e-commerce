@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
+
+import { UserContext } from "../context/UserContext";
+
 import { NavLink, Link } from "react-router-dom";
 import { BsSearch } from "react-icons/bs";
 import axios from "axios";  
@@ -10,6 +13,7 @@ import cart from "../images/cart.svg";
 import menu from "../images/menu.svg";
 
 function Header() {
+  const { setUserId } = useContext(UserContext);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -26,7 +30,9 @@ function Header() {
 
           if (response && response.status === 200) {
             setIsLoggedIn(true);
-            console.log(response.data.user);
+            const userId = response.data.user.id;
+            console.log("user id is ", userId);
+            setUserId(userId);
           } else {
             // Token is expired or invalid
             localStorage.removeItem("token");
@@ -41,7 +47,7 @@ function Header() {
     };
 
     checkLoginStatus();
-  }, []);
+  }, [setUserId]);
 
   return (
     <div>
