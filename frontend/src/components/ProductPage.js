@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { UserContext } from "../context/UserContext";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -7,6 +8,37 @@ function ProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
+    //get userId using useContext
+    const { userId } = useContext(UserContext);
+    console.log("user id is (from useContext), ", userId);
+    // Function to handle Add to Cart
+    const handleAddToCart = async () => {
+      try {
+        const response = await axios.post(
+          `${process.env.REACT_APP_BACKEND_API_URL}/cart/createCart`, 
+          {
+            userId: userId,
+            productId: productId,
+            count: 1, 
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.status === 201 || response.status === 200) {
+          alert("Item added to cart successfully!");
+        } else {
+          alert("Failed to add item to cart.");
+        }
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+        alert("An error occurred while adding the item to the cart.");
+      }
+    };
 
   /////////////////////////send request to backend using fetch api
   useEffect(() => {
@@ -151,11 +183,12 @@ function ProductPage() {
                   Add to favorites
                 </a>
 
-                <a
-                  href="#"
-                  title=""
+                <button
                   class="text-white mt-4 sm:mt-0 bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 flex items-center justify-center"
-                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAddToCart();
+                  }}
                 >
                   <svg
                     class="w-5 h-5 -ms-2 me-2"
@@ -175,7 +208,7 @@ function ProductPage() {
                     />
                   </svg>
                   Add to cart
-                </a>
+                </button>
               </div>
 
               <hr class="my-6 md:my-8 border-gray-200 dark:border-gray-800" />
