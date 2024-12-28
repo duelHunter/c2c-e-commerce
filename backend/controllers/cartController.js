@@ -53,6 +53,45 @@ exports.createCart = async (req, res) => {
   }
 };
 
+
+// Get all cart details
+exports.getCart = async (req, res) => {
+  const { userId } = req.params; // Assuming userId is sent as a route parameter
+
+  try {
+    // Find the cart for the given userId
+    const cart = await Cart.findOne({ orderby: userId }).populate({
+      path: 'products.product',
+      model: 'Product', // Reference the Product model for product details
+      select: 'title price images description', // Select fields to return
+    });
+
+    // If no cart exists for the user
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found for this user",
+      });
+    }
+
+    // Return cart details
+    return res.status(200).json({
+      success: true,
+      message: "Cart details fetched successfully",
+      cart,
+    });
+  } catch (error) {
+    // Error handling
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching the cart details",
+      error: error.message,
+    });
+  }
+};
+
+
+
 // Update quantity of a specific item in the cart (plus/minus buttons)
 exports.updateCartItem = async (req, res) => {
   const { userId, productId, count } = req.body;
