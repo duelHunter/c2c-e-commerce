@@ -50,6 +50,7 @@ function CartPage() {
       } else {
         alert(response.data.message);
       }
+      fetchCartDetails();
     } catch (error) {
       console.error("Error updating cart item:", error);
       alert("Failed to update cart item");
@@ -62,10 +63,15 @@ function CartPage() {
   const removeCartItem = async (productId) => {
     setLoading(true);
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_BACKEND_API_URL}/cart/removeItem`, {
-        userId,
-        productId,
-      });
+      const response = await axios.delete(
+        `${process.env.REACT_APP_BACKEND_API_URL}/cart/removeItem`,
+        {
+          data: {
+            userId,
+            productId,
+          },
+        }
+      );
 
       if (response.data.success) {
         alert(response.data.message);
@@ -105,14 +111,25 @@ function CartPage() {
                         <div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
                           <a href="#" className="shrink-0 md:order-1">
                             <img
-                              className="h-20 w-20 dark:hidden"
-                              src={item.product.image}
-                              alt={item.product.name}
+                              className="h-20 w-20 object-cover rounded dark:hidden"
+                              src={
+                                item.product.images?.[0]?.url
+                                  ? `${process.env.REACT_APP_UPLOADS}${item.product.images[0].url}`
+                                  : "/placeholder-image.png"
+                              }
+                              alt={item.product.title || "Product Image"}
+                              loading="lazy"
                             />
+
                             <img
                               className="hidden h-20 w-20 dark:block"
-                              src={item.product.image}
-                              alt={item.product.name}
+                              src={
+                                item.product.images?.[0]?.url
+                                  ? `${process.env.REACT_APP_UPLOADS}${item.product.images[0].url}`
+                                  : "/placeholder-image.png"
+                              }
+                              alt={item.product.title || "Product Image"}
+                              loading="lazy"
                             />
                           </a>
 
@@ -122,14 +139,16 @@ function CartPage() {
                           <div className="flex items-center justify-between md:order-3 md:justify-end">
                             <div className="flex items-center">
                               <button
-                                onClick={() =>{
-                                  console.log(item);
+                                onClick={() => {
+                                  console.log(
+                                    "Clicked iten id is  ",
+                                    item.product._id
+                                  );
                                   updateCartItemQuantity(
                                     item.product._id,
                                     item.count - 1
                                   );
-                                }
-                                }
+                                }}
                                 type="button"
                                 id="decrement-button"
                                 data-input-counter-decrement="counter-input"
@@ -230,9 +249,7 @@ function CartPage() {
                               </button>
 
                               <button
-                                onClick={()=>
-                                  removeCartItem(item.product._id)
-                                }
+                                onClick={() => removeCartItem(item.product._id)}
                                 type="button"
                                 className="inline-flex items-center text-sm font-medium text-red-600 hover:underline dark:text-red-500"
                               >

@@ -95,7 +95,7 @@ exports.getCart = async (req, res) => {
 // Update quantity of a specific item in the cart (plus/minus buttons)
 exports.updateCartItem = async (req, res) => {
   const { userId, productId, count } = req.body;
-
+  console.log("userid and productid and count is ",userId, productId, count);
   try {
     const cart = await Cart.findOne({ orderby: userId });
     if (!cart) {
