@@ -5,18 +5,25 @@ function CartPage() {
   const userId = "6709661dc8b3fc88921dad6e";
 
   const [loading, setLoading] = useState(false);
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState([]);
   const [error, setError] = useState("");
 
-  // Fetch Cart Details
+  const [prices, setPrices] = useState({
+    originalPrice: 0,
+    savings: 0,
+    totalPrice: 0
+  });
+
+   // Fetch Cart Details
   const fetchCartDetails = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_API_URL}/cart/getCart/6709661dc8b3fc88921dad6e`
+        `${process.env.REACT_APP_BACKEND_API_URL}/cart/getCart/${userId}`
       );
       if (response.data.success) {
-        setCart(response.data.cart);
+        setCart(response.data.cart || { products: [] });
+        calculatePrices(response.data.cart?.products || []);
       } else {
         setError(response.data.message);
       }
@@ -27,13 +34,36 @@ function CartPage() {
       setLoading(false);
     }
   };
+//////////////////////////////////////////////////////////calculatePrices
+const calculatePrices = (products) => {
+  if (!products) return;
+  
+  const originalPrice = products.reduce(
+    (acc, item) => acc + (item.product.price * item.count),
+    0
+  );
+  
+  // Calculate savings (you can modify this logic based on your requirements)
+  const savings = products.reduce(
+    (acc, item) => acc + ((item.product.price * item.count) * 0.1), // 10% savings example
+    0
+  );
+  
+  const totalPrice = originalPrice - savings;
 
-  useEffect(() => {
-    fetchCartDetails();
-  }, []);
+  setPrices({
+    originalPrice: parseFloat(originalPrice.toFixed(2)),
+    savings: parseFloat(savings.toFixed(2)),
+    totalPrice: parseFloat(totalPrice.toFixed(2))
+  });
+
+  console.log(originalPrice, savings, totalPrice);
+};
 
   // Function to Update Cart Item Quantity
   const updateCartItemQuantity = async (productId, count) => {
+    if (count < 1) return; // Prevent negative quantities
+    
     setLoading(true);
     try {
       const response = await axios.put(
@@ -47,10 +77,10 @@ function CartPage() {
 
       if (response.data.success) {
         setCart(response.data.cart);
+        calculatePrices(response.data.cart.products);
       } else {
         alert(response.data.message);
       }
-      fetchCartDetails();
     } catch (error) {
       console.error("Error updating cart item:", error);
       alert("Failed to update cart item");
@@ -74,8 +104,9 @@ function CartPage() {
       );
 
       if (response.data.success) {
+        setCart(response.data.cart);
+        calculatePrices(response.data.cart.products);
         alert(response.data.message);
-        setCart(response.data.cart.products); // Update the cart state
       } else {
         alert(response.data.message);
       }
@@ -86,6 +117,10 @@ function CartPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCartDetails();
+  }, []);
 
   return (
     <div>
@@ -568,25 +603,34 @@ function CartPage() {
 
                 <div class="space-y-4">
                   <div class="space-y-2">
-                    <dl class="flex items-center justify-between gap-4">
-                      <dt class="text-base font-normal text-gray-500 dark:text-gray-400">
-                        Original price
-                      </dt>
-                      <dd class="text-base font-medium text-gray-900 dark:text-white">
-                        $7,592.00
-                      </dd>
-                    </dl>
+                  <dl className="flex items-center justify-between gap-4">
+        <dt className="text-base font-normal text-gray-500 dark:text-gray-400">
+          Original price
+        </dt>
+        <dd className="text-base font-medium text-gray-900 dark:text-white">
+          ${prices.originalPrice.toFixed(2)}
+        </dd>
+      </dl>
 
-                    <dl class="flex items-center justify-between gap-4">
-                      <dt class="text-base font-normal text-gray-500 dark:text-gray-400">
-                        Savings
-                      </dt>
-                      <dd class="text-base font-medium text-green-600">
-                        -$299.00
-                      </dd>
-                    </dl>
+      <dl className="flex items-center justify-between gap-4">
+        <dt className="text-base font-normal text-gray-500 dark:text-gray-400">
+          Savings
+        </dt>
+        <dd className="text-base font-medium text-green-600">
+          -${prices.savings.toFixed(2)}
+        </dd>
+      </dl>
 
-                    <dl class="flex items-center justify-between gap-4">
+      <dl className="flex items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
+        <dt className="text-base font-bold text-gray-900 dark:text-white">
+          Total
+        </dt>
+        <dd className="text-base font-bold text-gray-900 dark:text-white">
+          ${prices.totalPrice.toFixed(2)}
+        </dd>
+      </dl>
+
+                    {/* <dl class="flex items-center justify-between gap-4">
                       <dt class="text-base font-normal text-gray-500 dark:text-gray-400">
                         Store Pickup
                       </dt>
@@ -602,17 +646,8 @@ function CartPage() {
                       <dd class="text-base font-medium text-gray-900 dark:text-white">
                         $799
                       </dd>
-                    </dl>
+                    </dl> */}
                   </div>
-
-                  <dl class="flex items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
-                    <dt class="text-base font-bold text-gray-900 dark:text-white">
-                      Total
-                    </dt>
-                    <dd class="text-base font-bold text-gray-900 dark:text-white">
-                      $8,191.00
-                    </dd>
-                  </dl>
                 </div>
 
                 <a
