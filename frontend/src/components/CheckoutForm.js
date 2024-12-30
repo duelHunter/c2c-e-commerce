@@ -20,15 +20,13 @@ const CheckoutForm = ({ totalPrice }) => {
     }
 
     const cardElement = elements.getElement(CardElement);
-
     try {
       // Call your backend to create a PaymentIntent
-      const { data: clientSecret } = await axios.post(
+      const { data: {clientSecret} } = await axios.post(
         `${process.env.REACT_APP_BACKEND_API_URL}/payment/create-payment-intent`,
-        // "http://localhost:5000/api/payment/create-payment-intent",
         { amount: totalPrice * 100 } // Amount in cents
       );
-
+      
       // Confirm the payment with the card details
       const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
@@ -37,6 +35,7 @@ const CheckoutForm = ({ totalPrice }) => {
       });
 
       if (stripeError) {
+        console.log("Stripe error:", stripeError);
         setError(stripeError.message);
         setIsProcessing(false);
         return;
@@ -47,6 +46,7 @@ const CheckoutForm = ({ totalPrice }) => {
         setError(null);
       }
     } catch (err) {
+        console.error("Error:", err);
       setError(err.response?.data?.message || "Payment failed. Please try again.");
     } finally {
       setIsProcessing(false);
