@@ -21,7 +21,6 @@ const CheckoutForm = ({ totalPrice }) => {
 
     const cardElement = elements.getElement(CardElement);
     try {
-      // Call your backend to create a PaymentIntent
       const { data: {clientSecret} } = await axios.post(
         `${process.env.REACT_APP_BACKEND_API_URL}/payment/create-payment-intent`,
         { amount: totalPrice * 100 } // Amount in cents
