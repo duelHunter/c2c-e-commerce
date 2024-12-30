@@ -38,6 +38,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth',require('./routes/userRoute'));
 app.use('/api/product', require('./routes/productRoute'));
 app.use('/api/cart', require('./routes/cartRoute'));
+app.use('/api/payment', require('./routes/paymentRoute'));
 
 const PORT = process.env.PORT || 5000;
 // console.log(process.env.MONGO_URI);

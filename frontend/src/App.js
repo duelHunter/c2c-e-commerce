@@ -18,7 +18,8 @@ import { loadStripe } from "@stripe/stripe-js";
 
 // Load your Stripe publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-const totalPrice = 100.0;
+console.log("key is  ",process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+const totalPrice = 989;
 const App = () => {
   return (
     <UserProvider>
