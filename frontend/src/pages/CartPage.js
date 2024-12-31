@@ -608,7 +608,7 @@ function CartPage() {
                         Original price
                       </dt>
                       <dd className="text-base font-medium text-gray-900 dark:text-white">
-                        ${prices.originalPrice.toFixed(2)}
+                        Rs.{prices.originalPrice.toFixed(2)}
                       </dd>
                     </dl>
 
@@ -617,7 +617,7 @@ function CartPage() {
                         Savings
                       </dt>
                       <dd className="text-base font-medium text-green-600">
-                        -${prices.savings.toFixed(2)}
+                        -Rs.{prices.savings.toFixed(2)}
                       </dd>
                     </dl>
 
@@ -626,7 +626,7 @@ function CartPage() {
                         Total
                       </dt>
                       <dd className="text-base font-bold text-gray-900 dark:text-white">
-                        ${prices.totalPrice.toFixed(2)}
+                        Rs.{prices.totalPrice.toFixed(2)}
                       </dd>
                     </dl>
                   </div>
