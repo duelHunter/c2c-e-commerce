@@ -245,7 +245,7 @@ function CartPage() {
                             </div>
                             <div className="text-end md:order-4 md:w-32">
                               <p className="text-base font-bold text-gray-900 dark:text-white">
-                                ${item.product.price}
+                                Rs.{item.product.price}
                               </p>
                             </div>
                           </div>
