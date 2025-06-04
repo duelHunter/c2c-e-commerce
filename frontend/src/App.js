@@ -10,6 +10,10 @@ import Signup from "./pages/SignUp";
 import Login from "./pages/Login";
 import MyStore from "./pages/MyStore";
 import ProductPage from "./components/ProductPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import HeaderFooterLayout from "./components/HeaderFooterLayout";
 import EmptyLayout from "./components/EmptyLayout";
 import UserProvider from "./context/UserContext";
@@ -77,6 +81,12 @@ const App = () => {
             
             {/* Route for product page with dynamic productId */}
             <Route path="/product/:productId" element={<ProductPage />} />
+
+            {/* Policy Pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
 
             {/* Route for Checkout */}
             <Route
