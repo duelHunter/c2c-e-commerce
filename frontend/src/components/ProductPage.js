@@ -72,7 +72,7 @@ function ProductPage() {
             <div class="shrink-0 max-w-md lg:max-w-lg mx-auto">
               <img
                 class="w-full dark:hidden"
-                src={`${process.env.REACT_APP_UPLOADS}${product.images[3].url}`}
+                src={`${process.env.REACT_APP_UPLOADS}${product.images[1].url}`}
                 alt=""
               />
             </div>
