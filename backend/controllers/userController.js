@@ -4,6 +4,7 @@ const admin = require('../config/firebase');
 const dotenv = require('dotenv');
 const asyncHandler = require('express-async-handler');
 const validateMongoDbId = require('../utils/validateMongodbId');
+const { addToBlacklist } = require('../utils/tokenBlacklist');
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -63,12 +64,8 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-let blacklist = new Set();
-
 exports.logoutUser = asyncHandler(async (req, res) => {
-
     const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '');
-    // const token = req.cookies.marketpulsetoken;
     console.log(`Token received for logout: ${token}`);
 
     if (token) {
@@ -77,7 +74,7 @@ exports.logoutUser = asyncHandler(async (req, res) => {
             jwt.verify(token, JWT_SECRET);
 
             // Add token to blacklist
-            blacklist.add(token);
+            addToBlacklist(token);
 
             res.status(200).json({ message: 'Logged out successfully' });
         } catch (error) {
@@ -112,21 +109,47 @@ exports.updateProfileDetails = asyncHandler(async (req, res, next) => {
     validateMongoDbId(id);
   
     try {
+      // Build update object dynamically based on what's in req.body
+      const updateData = {};
+      if (req.body.email !== undefined) updateData.email = req.body.email;
+      if (req.body.username !== undefined) updateData.username = req.body.username;
+      if (req.body.address !== undefined) updateData.address = req.body.address;
+      if (req.body.mobileNo !== undefined) updateData.mobileNo = req.body.mobileNo;
+      if (req.body.profilePhoto !== undefined) updateData.profilePhoto = req.body.profilePhoto;
+      if (req.body.cart !== undefined) updateData.cart = req.body.cart;
+
       const updatedUser = await User.findByIdAndUpdate(
         id,
-        {
-          email: req?.body?.email,
-          username: req?.body?.username,
-          address: req?.body?.address,
-          mobileNo: req?.body?.mobileNo,
-          cart: req?.body?.cart,
-
-        },
+        updateData,
         {
           new: true,
         }
       ).select("-firebaseUID -cart");//dont return sensitive data to frontend
       res.json(updatedUser);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+
+//======================================================delete Account
+exports.deleteAccount = asyncHandler(async (req, res, next) => {
+    const { id } = req.user;
+    validateMongoDbId(id);
+  
+    try {
+      // Get user to retrieve Firebase UID for deletion
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Delete user from MongoDB
+      await User.findByIdAndDelete(id);
+
+      // Optionally delete from Firebase (requires admin SDK)
+      // await admin.auth().deleteUser(user.firebaseUID);
+
+      res.status(200).json({ message: 'Account deleted successfully' });
     } catch (error) {
       throw new Error(error);
     }

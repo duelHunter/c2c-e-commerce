@@ -10,6 +10,8 @@ import { auth } from "../firebase";
 
 function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +20,8 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -34,20 +38,37 @@ function Login() {
         }
       );
       const { token } = jwtResponse.data;
-      console.log(token);
-      console.log(jwtResponse);
-
-      // document.cookie = `marketpulsetoken=${token}; domain=.localhost; path=/; SameSite=None`;
 
       localStorage.setItem("marketpulsetoken", token);
       //redirect to home page
       window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("Error signing in:", error);
+      let errorMessage = "An error occurred during login. Please try again.";
+      
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address.";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage = "This account has been disabled.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      setError(errorMessage);
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -60,13 +81,23 @@ function Login() {
         }
       );
       const { token } = jwtResponse.data;
-      console.log(token);
-      /////////////////////////////////////////////////
-      // document.cookie = `token=${token}; domain=.127.0.0.1:3000; path=/; SameSite=Lax`;
+      
       localStorage.setItem("marketpulsetoken", token);
       window.location.href = `${process.env.REACT_APP_FRONTEND_URL}`;
     } catch (error) {
-      console.error("Error signing up with Google:", error);
+      console.error("Error signing in with Google:", error);
+      let errorMessage = "An error occurred during Google sign-in. Please try again.";
+      
+      if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Sign-in popup was closed. Please try again.";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage = "Popup was blocked. Please allow popups and try again.";
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      setError(errorMessage);
+      setLoading(false);
     }
   };
 
@@ -77,8 +108,15 @@ function Login() {
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-                Create an account
+                Sign in to your account
               </h1>
+              
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+
               <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label
@@ -124,19 +162,25 @@ function Login() {
 
                 <button
                   type="submit"
-                  className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4
-                 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 
-                 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  disabled={loading}
+                  className={`w-full text-white ${
+                    loading
+                      ? "bg-blue-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  } focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800`}
                 >
-                  Login
+                  {loading ? "Signing in..." : "Login"}
                 </button>
               </form>
               <button
                 onClick={handleGoogleLogin}
                 type="button"
-                className="w-full text-white bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none 
-    focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center 
-    justify-center dark:focus:ring-[#4285F4]/55 me-2 mb-2"
+                disabled={loading}
+                className={`w-full text-white ${
+                  loading
+                    ? "bg-[#4285F4]/70 cursor-not-allowed"
+                    : "bg-[#4285F4] hover:bg-[#4285F4]/90"
+                } focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-center dark:focus:ring-[#4285F4]/55 me-2 mb-2`}
               >
                 <svg
                   className="w-4 h-4 me-2"

@@ -6,6 +6,7 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true },
     mobileNo: { type: Number, required: false },
     address: {type: String, required: false},
+    profilePhoto: {type: String, required: false},
     cart: {type: Array, default: []},
     
   },

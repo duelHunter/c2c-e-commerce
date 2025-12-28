@@ -12,12 +12,21 @@ function Profile() {
     address: "",
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch profile data from API on component mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("marketpulsetoken");
+        if (!token) {
+          setError("Please login to view your profile");
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.get(
           `${process.env.REACT_APP_BACKEND_API_URL}/auth/profile`,
           {
@@ -30,14 +39,24 @@ function Profile() {
         setFormData({
           profilePhoto:
             response.data.profilePhoto || "https://via.placeholder.com/150",
-          username: response.data.username,
-          email: response.data.email,
-          mobileNo: response.data.mobileNo,
-          address: response.data.address,
+          username: response.data.username || "",
+          email: response.data.email || "",
+          mobileNo: response.data.mobileNo || "",
+          address: response.data.address || "",
         });
         setLoading(false);
+        setError(null);
       } catch (error) {
         console.error("Error fetching profile data", error);
+        setError(error.response?.data?.msg || error.response?.data?.error || "Failed to load profile data");
+        setLoading(false);
+        // If token is invalid, redirect to login
+        if (error.response?.status === 401) {
+          localStorage.removeItem("marketpulsetoken");
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 2000);
+        }
       }
     };
 
@@ -58,8 +77,16 @@ function Profile() {
   //update profile data when save button is pressed
   const handleSave = async (section) => {
     try {
+      setError(null);
+      setSuccess(null);
       const token = localStorage.getItem("marketpulsetoken");
-      const tester = await axios.put(
+      
+      if (!token) {
+        setError("Please login to update your profile");
+        return;
+      }
+
+      const response = await axios.put(
         `${process.env.REACT_APP_BACKEND_API_URL}/auth/updateProfileDetails`,
         {
           //payload
@@ -67,15 +94,29 @@ function Profile() {
         },
         {
           headers: {
-            authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      console.log(tester.data);
+
+      // Update formData with response data
+      if (response.data) {
+        setFormData(prev => ({
+          ...prev,
+          [section]: response.data[section] || formData[section],
+        }));
+      }
 
       setEditSection(null);
+      setSuccess(`${section === "profilePhoto" ? "Profile photo" : section.charAt(0).toUpperCase() + section.slice(1)} updated successfully!`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error("Error saving profile data", error);
+      setError(error.response?.data?.msg || error.response?.data?.error || `Failed to update ${section}`);
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -86,30 +127,113 @@ function Profile() {
   // Logout function
   const logoutMe = async () => {
     try {
+      setError(null);
       const token = localStorage.getItem("marketpulsetoken");
-      await axios.post(
-        `${process.env.REACT_APP_BACKEND_API_URL}/auth/logout`,
-        {},
-        {
-          headers: {
-            authorization: `Bearer ${token}`,
-          },
+      
+      if (token) {
+        try {
+          await axios.post(
+            `${process.env.REACT_APP_BACKEND_API_URL}/auth/logout`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        } catch (err) {
+          // Even if logout API fails, remove token locally
+          console.error("Error calling logout API", err);
         }
-      );
+      }
+      
       localStorage.removeItem("marketpulsetoken");
       window.location.href = "/";
     } catch (err) {
       console.error("Error logging out", err);
+      // Still remove token and redirect even if there's an error
+      localStorage.removeItem("marketpulsetoken");
+      window.location.href = "/";
+    }
+  };
+
+  // Delete account function
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
+    const doubleConfirm = window.confirm(
+      "This will permanently delete your account and all associated data. Are you absolutely sure?"
+    );
+
+    if (!doubleConfirm) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setError(null);
+      const token = localStorage.getItem("marketpulsetoken");
+      
+      if (!token) {
+        setError("Please login to delete your account");
+        setIsDeleting(false);
+        return;
+      }
+
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_API_URL}/auth/deleteAccount`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Remove token and redirect
+      localStorage.removeItem("marketpulsetoken");
+      alert("Your account has been deleted successfully.");
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error deleting account", error);
+      setError(error.response?.data?.msg || error.response?.data?.error || "Failed to delete account. Please try again.");
+      setIsDeleting(false);
+      setTimeout(() => setError(null), 5000);
     }
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-2xl font-bold mb-4">My Info</h1>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          {success}
+        </div>
+      )}
 
       {/* Profile Photo Section */}
       <div className="bg-white shadow-md rounded p-6 mb-6">
@@ -328,8 +452,19 @@ function Profile() {
 
       <div className="bg-white shadow-md rounded p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Delete Account</h2>
-        <button className="bg-red-700 text-white px-4 py-2 rounded">
-          Delete Account
+        <p className="text-gray-600 mb-4">
+          Once you delete your account, there is no going back. Please be certain.
+        </p>
+        <button
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+          className={`${
+            isDeleting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-700 hover:bg-red-800"
+          } text-white px-4 py-2 rounded`}
+        >
+          {isDeleting ? "Deleting..." : "Delete Account"}
         </button>
       </div>
     </div>

@@ -35,12 +35,12 @@ function Header() {
             setUserId(userId);
           } else {
             // Token is expired or invalid
-            localStorage.removeItem("token");
+            localStorage.removeItem("marketpulsetoken");
             setIsLoggedIn(false);
           }
         } catch (error) {
           console.error("Invalid token:", error);
-          localStorage.removeItem("token");
+          localStorage.removeItem("marketpulsetoken");
           setIsLoggedIn(false);
         }
       }

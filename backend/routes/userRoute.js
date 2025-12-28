@@ -4,6 +4,7 @@ const {
   logoutUser, 
   getProfileDetails, 
   updateProfileDetails,
+  deleteAccount,
 } = require('../controllers/userController');
 const express = require('express');
 const router = express.Router();
@@ -15,6 +16,7 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.get("/profile", authenticateToken, getProfileDetails);
 router.put("/updateProfileDetails", authenticateToken, updateProfileDetails);
+router.delete("/deleteAccount", authenticateToken, deleteAccount);
 
 router.post("/isLogedin", authenticateToken, (req, res) => {
   res.json({ loggedIn: true, user: req.user });

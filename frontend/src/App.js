@@ -14,7 +14,8 @@ import EmptyLayout from "./components/EmptyLayout";
 import UserProvider from "./context/UserContext";
 import CheckoutForm from "./components/CheckoutForm"; 
 import { Elements } from "@stripe/react-stripe-js"; 
-import { loadStripe } from "@stripe/stripe-js"; 
+import { loadStripe } from "@stripe/stripe-js";
+import ProtectedRoute from "./components/ProtectedRoute"; 
 
 // Load your Stripe publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -34,9 +35,30 @@ const App = () => {
           {/* HeaderFooterLayout for pages with header and footer */}
           <Route path="/" element={<HeaderFooterLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/mystore" element={<MyStore />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mystore"
+              element={
+                <ProtectedRoute>
+                  <MyStore />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Route for product page with dynamic productId */}
             <Route path="/product/:productId" element={<ProductPage />} />
@@ -45,9 +67,11 @@ const App = () => {
             <Route
               path="/checkout"
               element={
-                <Elements stripe={stripePromise}>
-                  <CheckoutForm totalPrice={totalPrice} />
-                </Elements>
+                <ProtectedRoute>
+                  <Elements stripe={stripePromise}>
+                    <CheckoutForm totalPrice={totalPrice} />
+                  </Elements>
+                </ProtectedRoute>
               }
             />
           </Route>

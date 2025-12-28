@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const { isBlacklisted } = require('../utils/tokenBlacklist');
+
 dotenv.config();
 
 // Middleware to verify JWT token
@@ -8,6 +10,11 @@ const authenticateToken = (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({ msg: 'No token, authorization denied' });
+  }
+
+  // Check if token is blacklisted
+  if (isBlacklisted(token)) {
+    return res.status(401).json({ msg: 'Token has been invalidated' });
   }
 
   try {
