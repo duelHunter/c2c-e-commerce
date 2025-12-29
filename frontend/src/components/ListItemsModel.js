@@ -6,6 +6,8 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
   // State to manage which modal is open
   const [currentModal, setCurrentModal] = useState(0); // 0: none, 1: first, 2: second, 3: third
   const [categories, setCategories] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [subcategories, setSubcategories] = useState([]);
 
@@ -30,9 +32,8 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
     console.log(imageURLs);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const formData = new FormData();
-    // formData.append("category", selectedCategory);
     formData.append("category", selectedSubcategory);
     formData.append("brand", selectedBrand);
     formData.append("title", productTitle);
@@ -46,44 +47,64 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
     }
 
     const token = localStorage.getItem("marketpulsetoken");
-    axios.post(
-      `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`,
-      formData,  
-      {
-        headers: {
-           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+    
+    try {
+      let response;
+      if (isEditMode && editingProduct) {
+        // Update existing product
+        response = await axios.put(
+          `${process.env.REACT_APP_BACKEND_API_URL}/product/updateProduct/${editingProduct._id}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      } else {
+        // Create new product
+        response = await axios.post(
+          `${process.env.REACT_APP_BACKEND_API_URL}/product/createItem`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
       }
-    )
-      .then((response) => {
-        console.log("Product listed successfully", response);
-        // Reset form
-        setProductTitle("");
-        setProductDescription("");
-        setProductImages([]);
-        setImagePreviews([]);
-        setQuantity("");
-        setPrice("");
-        setSelectedSubcategory("");
-        setSelectedBrand("");
-        setSubcategories([]);
-        
-        // Close modals
-        setCurrentModal(0);
-        
-        // Show success message
-        alert("Product listed successfully!");
-        
-        // Call callback to refresh product list
-        if (onProductCreated) {
-          onProductCreated();
-        }
-      })
-      .catch((error) => {
-        console.error("Error listing product", error);
-        alert("Failed to list product. Please try again.");
-      });
+
+      console.log(isEditMode ? "Product updated successfully" : "Product listed successfully", response);
+      
+      // Reset form
+      setProductTitle("");
+      setProductDescription("");
+      setProductImages([]);
+      setImagePreviews([]);
+      setQuantity("");
+      setPrice("");
+      setSelectedSubcategory("");
+      setSelectedBrand("");
+      setSubcategories([]);
+      setEditingProduct(null);
+      setIsEditMode(false);
+      
+      // Close modals
+      setCurrentModal(0);
+      
+      // Show success message
+      alert(isEditMode ? "Product updated successfully!" : "Product listed successfully!");
+      
+      // Call callback to refresh product list
+      if (onProductCreated) {
+        onProductCreated();
+      }
+    } catch (error) {
+      console.error(isEditMode ? "Error updating product" : "Error listing product", error);
+      alert(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'list'} product. Please try again.`);
+    }
   };
 
   // Function to handle category selection and fetch subcategories
@@ -133,11 +154,59 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
   // Listen for custom event to open modal
   useEffect(() => {
     const handleOpenModal = () => {
+      setIsEditMode(false);
+      setEditingProduct(null);
       openModal(1);
     };
+    
+    const handleOpenEditModal = async (event) => {
+      const product = event.detail;
+      setEditingProduct(product);
+      setIsEditMode(true);
+      
+      // Pre-fill form with product data
+      setProductTitle(product.title || "");
+      setProductDescription(product.description || "");
+      setQuantity(product.quantity?.toString() || "");
+      setPrice(product.price?.toString() || "");
+      const categoryId = product.category?._id || product.category || "";
+      setSelectedSubcategory(categoryId);
+      
+      // Load categories first
+      try {
+        const categoriesResponse = await axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`);
+        const fetchedCategories = categoriesResponse.data.categories || [];
+        const categoryOptions = fetchedCategories.map((category) => ({
+          value: category._id,
+          label: category.name,
+        }));
+        setCategories(categoryOptions);
+        
+        // If product has a category, load its subcategories
+        if (categoryId) {
+          const subcategoriesResponse = await axios.get(
+            `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${categoryId}`
+          );
+          const fetchedSubcategories = subcategoriesResponse.data.subCategories || [];
+          const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+            value: subcategory._id,
+            label: subcategory.name,
+          }));
+          setSubcategories(subcategoryOptions);
+        }
+      } catch (err) {
+        console.error("Error loading categories for edit:", err);
+      }
+      
+      // Open modal
+      openModal(1);
+    };
+    
     window.addEventListener('openListModal', handleOpenModal);
+    window.addEventListener('openEditModal', handleOpenEditModal);
     return () => {
       window.removeEventListener('openListModal', handleOpenModal);
+      window.removeEventListener('openEditModal', handleOpenEditModal);
     };
   }, []);
 
@@ -172,7 +241,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
               {/* Modal header */}
               <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Create New Product - Step 1
+                  {isEditMode ? "Edit Product - Step 1" : "Create New Product - Step 1"}
                 </h3>
                 <button
                   type="button"
@@ -288,7 +357,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
               {/* Modal header */}
               <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Create New Product
+                  {isEditMode ? "Edit Product" : "Create New Product"}
                 </h3>
                 <button
                   type="button"
@@ -445,7 +514,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                 {/* <!-- Modal header --> */}
                 <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Create New Product
+                    {isEditMode ? "Edit Product" : "Create New Product"}
                   </h3>
                   {/* close button */}
                   <button
@@ -528,7 +597,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                       onClick={handleSubmit}
                       className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                     >
-                      List item
+                      {isEditMode ? "Update Product" : "List item"}
                     </button>
                   </div>
                 </form>

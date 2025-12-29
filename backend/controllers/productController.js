@@ -145,3 +145,100 @@ exports.getAllProducts = async (req, res) => {
       });
     }
   };
+
+  // Update product (only by the seller who owns it)
+  exports.updateProduct = async (req, res) => {
+    try {
+      const productId = req.params.id;
+      const sellerId = req.user.id;
+      const { title, description, price, category, quantity } = req.body;
+
+      // Find the product and verify ownership
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      if (product.sellerId.toString() !== sellerId) {
+        return res.status(403).json({ message: "You don't have permission to update this product" });
+      }
+
+      // Handle image updates if new images are uploaded
+      let imagesArray = product.images || [];
+      if (req.files && req.files.length > 0) {
+        // Add new images to existing ones
+        for (const file of req.files) {
+          imagesArray.push({
+            public_id: file.filename,
+            url: `/uploads/${file.filename}`,
+          });
+        }
+      }
+
+      // Update product
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        {
+          title: title || product.title,
+          description: description || product.description,
+          price: price || product.price,
+          category: category || product.category,
+          quantity: quantity !== undefined ? quantity : product.quantity,
+          images: imagesArray,
+        },
+        { new: true }
+      ).populate('category', 'name slug');
+
+      res.status(200).json({
+        message: "Product updated successfully",
+        product: updatedProduct,
+      });
+    } catch (error) {
+      console.error("Error updating product: ", error);
+      res.status(500).json({
+        message: "Error updating product",
+        error: error.message,
+      });
+    }
+  };
+
+  // Delete product (only by the seller who owns it)
+  exports.deleteProduct = async (req, res) => {
+    try {
+      const productId = req.params.id;
+      const sellerId = req.user.id;
+
+      // Find the product and verify ownership
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      if (product.sellerId.toString() !== sellerId) {
+        return res.status(403).json({ message: "You don't have permission to delete this product" });
+      }
+
+      // Delete associated image files
+      if (product.images && product.images.length > 0) {
+        for (const image of product.images) {
+          const imagePath = path.join(__dirname, "..", image.url);
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          }
+        }
+      }
+
+      // Delete the product
+      await Product.findByIdAndDelete(productId);
+
+      res.status(200).json({
+        message: "Product deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting product: ", error);
+      res.status(500).json({
+        message: "Error deleting product",
+        error: error.message,
+      });
+    }
+  };

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { createCategories, getCategories, getSubCategories } = require("../controllers/categoryCreater");
-const { createProduct, getAllProducts, getSelectedProduct, getMyProducts } = require("../controllers/productController");
+const { createProduct, getAllProducts, getSelectedProduct, getMyProducts, updateProduct, deleteProduct } = require("../controllers/productController");
 const authenticateToken = require("../middlewares/auth");
 const multer = require("multer");
 
@@ -21,5 +21,7 @@ router.post("/createItem", authenticateToken, upload.array("images", 5), createP
 router.get("/getAllproducts", getAllProducts);
 router.get("/getSelectedProduct/:id", getSelectedProduct);
 router.get("/getMyProducts", authenticateToken, getMyProducts); // Get products for authenticated seller
+router.put("/updateProduct/:id", authenticateToken, upload.array("images", 5), updateProduct); // Update product
+router.delete("/deleteProduct/:id", authenticateToken, deleteProduct); // Delete product
 
 module.exports = router;

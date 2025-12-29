@@ -7,6 +7,8 @@ function MyStore() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
   // Fetch user's products
   useEffect(() => {
@@ -61,6 +63,44 @@ function MyStore() {
     fetchMyProducts();
   };
 
+  // Delete product
+  const handleDelete = async (productId) => {
+    if (!window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setDeletingId(productId);
+      const token = localStorage.getItem("marketpulsetoken");
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_API_URL}/product/deleteProduct/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Remove product from state
+      setProducts(products.filter(p => p._id !== productId));
+      alert("Product deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      alert(err.response?.data?.message || "Failed to delete product");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Handle edit - open edit modal (we'll use the ListItemsModel for editing)
+  const handleEdit = (product) => {
+    // Store product data for editing
+    setEditingId(product._id);
+    // Trigger edit modal with product data
+    const event = new CustomEvent('openEditModal', { detail: product });
+    window.dispatchEvent(event);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-12 px-4 md:px-8 lg:px-16">
@@ -106,51 +146,91 @@ function MyStore() {
               You have <span className="font-semibold">{products.length}</span> item{products.length !== 1 ? 's' : ''} listed
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <div
-                key={product._id}
-                className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-              >
-                <Link to={`/product/${product._id}`}>
-                  <div className="h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {product.images && product.images.length > 0 && product.images[0]?.url ? (
-                      <img
-                        src={`${process.env.REACT_APP_BACKEND_API_URL}${product.images[0].url}`}
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-gray-400">No Image</div>
-                    )}
-                  </div>
-                </Link>
-                <div className="p-4">
-                  <Link to={`/product/${product._id}`}>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">
-                      {product.title}
-                    </h3>
-                  </Link>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-gray-900">
-                      Rs. {product.price}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      Qty: {product.quantity}
-                    </span>
-                  </div>
-                  {product.sold > 0 && (
-                    <div className="mt-2 text-sm text-green-600">
-                      Sold: {product.sold}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+          
+          {/* List View */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sold</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {products.map((product) => (
+                    <tr key={product._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-16 w-16">
+                            {product.images && product.images.length > 0 && product.images[0]?.url ? (
+                              <img
+                                src={`${process.env.REACT_APP_UPLOADS}${product.images[0].url}`}
+                                alt={product.title}
+                                className="h-16 w-16 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+                                No Image
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            <Link to={`/product/${product._id}`}>
+                              <div className="text-sm font-medium text-gray-900 hover:text-blue-600">
+                                {product.title}
+                              </div>
+                            </Link>
+                            <div className="text-sm text-gray-500 line-clamp-1">
+                              {product.description}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">
+                          Rs. {product.price}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {product.quantity}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {product.sold || 0}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="text-blue-600 hover:text-blue-900 font-medium"
+                            disabled={editingId === product._id}
+                          >
+                            Edit
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button
+                            onClick={() => handleDelete(product._id)}
+                            className="text-red-600 hover:text-red-900 font-medium"
+                            disabled={deletingId === product._id}
+                          >
+                            {deletingId === product._id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
           <div className="mt-8 flex justify-center">
             <button
               onClick={() => {
