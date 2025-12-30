@@ -12,6 +12,8 @@ import ProductPage from "./components/ProductPage";
 import HeaderFooterLayout from "./components/HeaderFooterLayout";
 import EmptyLayout from "./components/EmptyLayout";
 import UserProvider from "./context/UserContext";
+import { ToastProvider } from "./context/ToastContext";
+import ToastContainer from "./components/Toast";
 import CheckoutForm from "./components/CheckoutForm"; 
 import { Elements } from "@stripe/react-stripe-js"; 
 import { loadStripe } from "@stripe/stripe-js";
@@ -24,8 +26,10 @@ const totalPrice = 989;
 const App = () => {
   return (
     <UserProvider>
-      <Router>
-        <Routes>
+      <ToastProvider>
+        <Router>
+          <ToastContainer />
+          <Routes>
           {/* EmptyLayout for pages without header and footer */}
           <Route path="/" element={<EmptyLayout />}>
             <Route path="/signup" element={<Signup />} />
@@ -77,6 +81,7 @@ const App = () => {
           </Route>
         </Routes>
       </Router>
+      </ToastProvider>
     </UserProvider>
   );
 };

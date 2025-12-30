@@ -1,7 +1,8 @@
 // ProductCard.jsx
 import React, { useContext } from "react";
 import { UserContext } from "../context/UserContext";
-import { Link } from "react-router-dom";
+import { useToast } from "../context/ToastContext";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ProductCard = ({
@@ -15,9 +16,22 @@ const ProductCard = ({
 
   //get userId using useContext
   const { userId } = useContext(UserContext);
+  const navigate = useNavigate();
+  const toast = useToast();
   console.log("user id is (from useContext), ", userId);
+  
   // Function to handle Add to Cart
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.preventDefault(); // Prevent navigation when clicking the button
+    
+    // Check if user is logged in
+    const token = localStorage.getItem("marketpulsetoken");
+    if (!userId || !token) {
+      toast.warning("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_API_URL}/cart/createCart`, 
@@ -33,13 +47,19 @@ const ProductCard = ({
         }
       );
       if (response.status === 201 || response.status === 200) {
-        alert("Item added to cart successfully!");
+        toast.success("Item added to cart successfully!");
       } else {
-        alert("Failed to add item to cart.");
+        toast.error("Failed to add item to cart.");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("An error occurred while adding the item to the cart.");
+      // Check if error is due to authentication
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.warning("Please login to add items to cart");
+        navigate("/login");
+      } else {
+        toast.error("An error occurred while adding the item to the cart.");
+      }
     }
   };
 
@@ -120,10 +140,7 @@ const ProductCard = ({
 
             <button
               className="mt-4 w-full rounded-lg bg-primary-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-500 dark:hover:bg-primary-600 dark:focus:ring-primary-800"
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart();
-              }}
+              onClick={handleAddToCart}
             >
               Add to cart
             </button>

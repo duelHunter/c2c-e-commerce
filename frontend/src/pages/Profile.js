@@ -1,8 +1,10 @@
 // src/pages/Profile.js
 import axios from "axios";
 import React, { useState, useEffect } from "react";
+import { useToast } from "../context/ToastContext";
 
 function Profile() {
+  const toast = useToast();
   const [editSection, setEditSection] = useState(null);
   const [formData, setFormData] = useState({
     profilePhoto: "https://via.placeholder.com/150",
@@ -197,8 +199,10 @@ function Profile() {
 
       // Remove token and redirect
       localStorage.removeItem("marketpulsetoken");
-      alert("Your account has been deleted successfully.");
-      window.location.href = "/";
+      toast.success("Your account has been deleted successfully.");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
       console.error("Error deleting account", error);
       setError(error.response?.data?.msg || error.response?.data?.error || "Failed to delete account. Please try again.");
@@ -330,7 +334,7 @@ function Profile() {
                   onBlur={(e) => {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if (!emailRegex.test(e.target.value)) {
-                      alert("Please enter a valid email address");
+                      toast.warning("Please enter a valid email address");
                     }
                   }}
                   required

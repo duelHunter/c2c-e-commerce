@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useToast } from "../context/ToastContext";
 import ListItemsModel from "../components/ListItemsModel";
 
 function MyStore() {
+  const toast = useToast();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,10 +85,10 @@ function MyStore() {
       
       // Remove product from state
       setProducts(products.filter(p => p._id !== productId));
-      alert("Product deleted successfully!");
+      toast.success("Product deleted successfully!");
     } catch (err) {
       console.error("Error deleting product:", err);
-      alert(err.response?.data?.message || "Failed to delete product");
+      toast.error(err.response?.data?.message || "Failed to delete product");
     } finally {
       setDeletingId(null);
     }

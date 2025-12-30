@@ -66,11 +66,12 @@ exports.getCart = async (req, res) => {
       select: 'title price images description', // Select fields to return
     });
 
-    // If no cart exists for the user
+    // If no cart exists for the user, return empty cart instead of 404
     if (!cart) {
-      return res.status(404).json({
-        success: false,
-        message: "Cart not found for this user",
+      return res.status(200).json({
+        success: true,
+        message: "Cart is empty",
+        cart: { products: [] },
       });
     }
 
@@ -126,10 +127,18 @@ exports.updateCartItem = async (req, res) => {
     }
 
     await cart.save();
+    
+    // Populate product details before sending response
+    const populatedCart = await Cart.findOne({ orderby: userId }).populate({
+      path: 'products.product',
+      model: 'Product',
+      select: 'title price images description',
+    });
+
     return res.status(200).json({
       success: true,
       message: "Cart item updated successfully",
-      cart
+      cart: populatedCart
     });
   } catch (error) {
     return res.status(500).json({

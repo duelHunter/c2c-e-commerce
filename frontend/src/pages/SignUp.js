@@ -8,9 +8,11 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import axios from "axios";
+import { useToast } from "../context/ToastContext";
 import { auth } from "../firebase";
 
 function Signup() {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -26,7 +28,7 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -39,7 +41,7 @@ function Signup() {
 
       const user = userCredential.user;
       await sendEmailVerification(user);
-      window.alert("Verification email sent!...Please check your inbox.");
+      toast.success("Verification email sent! Please check your inbox.");
       ///////////////////will removed in future
       // const idToken = await user.getIdToken();
       // const jwtResponse = await axios.post(`${process.env.REACT_APP_BACKEND_API_URL}/auth/register`, {

@@ -1,8 +1,10 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useToast } from "../context/ToastContext";
 
 function ListItemsModel({ onProductCreated, showEmptyState = true }) {
+  const toast = useToast();
   // State to manage which modal is open
   const [currentModal, setCurrentModal] = useState(0); // 0: none, 1: first, 2: second, 3: third
   const [categories, setCategories] = useState([]);
@@ -95,7 +97,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
       setCurrentModal(0);
       
       // Show success message
-      alert(isEditMode ? "Product updated successfully!" : "Product listed successfully!");
+      toast.success(isEditMode ? "Product updated successfully!" : "Product listed successfully!");
       
       // Call callback to refresh product list
       if (onProductCreated) {
@@ -103,7 +105,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
       }
     } catch (error) {
       console.error(isEditMode ? "Error updating product" : "Error listing product", error);
-      alert(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'list'} product. Please try again.`);
+      toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'list'} product. Please try again.`);
     }
   };
 

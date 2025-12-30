@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { UserContext } from "../context/UserContext";
+import { useToast } from "../context/ToastContext";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function CartPage() {
-  const userId = "6709661dc8b3fc88921dad6e";
-
+  const { userId } = useContext(UserContext);
+  const navigate = useNavigate();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState({ products: [] });
   const [error, setError] = useState("");
 
   const [prices, setPrices] = useState({
@@ -16,8 +20,21 @@ function CartPage() {
 
   // Fetch Cart Details
   const fetchCartDetails = async () => {
+    // Check if user is logged in
+    const token = localStorage.getItem("marketpulsetoken");
+    if (!userId || !token) {
+      setError("Please login to view your cart");
+      setLoading(false);
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError("");
       const response = await axios.get(
         `${process.env.REACT_APP_BACKEND_API_URL}/cart/getCart/${userId}`
       );
@@ -25,11 +42,17 @@ function CartPage() {
         setCart(response.data.cart || { products: [] });
         calculatePrices(response.data.cart?.products || []);
       } else {
-        setError(response.data.message);
+        setError(response.data.message || "Failed to fetch cart");
       }
     } catch (err) {
-      setError("Failed to fetch cart details. Please try again.");
-      console.error(err);
+      console.error("Error fetching cart:", err);
+      // If cart not found (404), show empty cart instead of error
+      if (err.response?.status === 404) {
+        setCart({ products: [] });
+        setError("");
+      } else {
+        setError("Failed to fetch cart details. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -78,12 +101,13 @@ function CartPage() {
       if (response.data.success) {
         setCart(response.data.cart);
         calculatePrices(response.data.cart.products);
+        toast.success("Cart item updated successfully");
       } else {
-        alert(response.data.message);
+        toast.error(response.data.message || "Failed to update cart item");
       }
     } catch (error) {
       console.error("Error updating cart item:", error);
-      alert("Failed to update cart item");
+      toast.error("Failed to update cart item");
     } finally {
       setLoading(false);
     }
@@ -106,13 +130,13 @@ function CartPage() {
       if (response.data.success) {
         setCart(response.data.cart);
         calculatePrices(response.data.cart.products);
-        alert(response.data.message);
+        toast.success(response.data.message || "Item removed from cart");
       } else {
-        alert(response.data.message);
+        toast.error(response.data.message || "Failed to remove item");
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      alert("Failed to remove item from cart");
+      toast.error("Failed to remove item from cart");
     } finally {
       setLoading(false);
     }
@@ -120,7 +144,7 @@ function CartPage() {
 
   useEffect(() => {
     fetchCartDetails();
-  }, []);
+  }, [userId]); // Re-fetch when userId changes
 
   return (
     <div>
@@ -135,8 +159,12 @@ function CartPage() {
               {/* item list is start here */}
               <div className="p-6">
                 {loading && <p>Loading...</p>}
-                {error && <p className="text-red-500">{error}</p>}
-                {cart.products && cart.products.length > 0 ? (
+                {error && !loading && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {error}
+                  </div>
+                )}
+                {!loading && !error && cart.products && cart.products.length > 0 ? (
                   <div className="space-y-6">
                     {cart.products.map((item) => (
                       <div
@@ -314,7 +342,17 @@ function CartPage() {
                     ))}
                   </div>
                 ) : (
-                  <p>Your cart is empty.</p>
+                  !loading && !error && (
+                    <div className="text-center py-12">
+                      <p className="text-lg text-gray-600 mb-4">Your cart is empty.</p>
+                      <a
+                        href="/"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Continue Shopping
+                      </a>
+                    </div>
+                  )
                 )}
               </div>
               {/* item list end here */}
