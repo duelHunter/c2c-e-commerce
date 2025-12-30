@@ -39,10 +39,15 @@ function HomePage() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
         {products.map((product) => (
           <ProductCard
+            key={product._id}
             id={product._id}
             productName={product.title}
             price={product.price}
-            imageSrc={product.images[1].url}
+            imageSrc={
+              product.images && product.images.length > 0 && product.images[0]?.url
+                ? product.images[0].url
+                : "/placeholder-image.png"
+            }
             discount='35%'
           />
         ))}
