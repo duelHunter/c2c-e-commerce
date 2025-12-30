@@ -120,3 +120,28 @@ exports.getAllProducts = async (req, res) => {
       });
     }
   };
+
+  // Get all products for the authenticated seller (My Store)
+  exports.getMyProducts = async (req, res) => {
+    try {
+      const sellerId = req.user.id; // Get seller ID from authenticated user
+      
+      // Find all products for this seller
+      const products = await Product.find({ sellerId })
+        .populate('category', 'name slug') // Populate category details
+        .sort({ createdAt: -1 }); // Sort by newest first
+  
+      // Return the products in the response
+      res.status(200).json({
+        message: "Products fetched successfully",
+        products,
+        count: products.length,
+      });
+    } catch (error) {
+      console.error("Error fetching seller products: ", error);
+      res.status(500).json({
+        message: "Error fetching products",
+        error: error.message,
+      });
+    }
+  };

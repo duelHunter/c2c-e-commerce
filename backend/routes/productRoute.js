@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { createCategories, getCategories, getSubCategories } = require("../controllers/categoryCreater");
-const { createProduct, getAllProducts, getSelectedProduct } = require("../controllers/productController");
+const { createProduct, getAllProducts, getSelectedProduct, getMyProducts } = require("../controllers/productController");
 const authenticateToken = require("../middlewares/auth");
 const multer = require("multer");
 
@@ -20,5 +20,6 @@ router.post("/createItem", authenticateToken, upload.array("images", 5), createP
 //////////////////get item details with different filters (Featured products, Best sellers, New products, Suggestions)
 router.get("/getAllproducts", getAllProducts);
 router.get("/getSelectedProduct/:id", getSelectedProduct);
+router.get("/getMyProducts", authenticateToken, getMyProducts); // Get products for authenticated seller
 
 module.exports = router;

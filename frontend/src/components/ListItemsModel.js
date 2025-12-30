@@ -1,16 +1,11 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
-function ListItemsModel() {
+function ListItemsModel({ onProductCreated, showEmptyState = true }) {
   // State to manage which modal is open
   const [currentModal, setCurrentModal] = useState(0); // 0: none, 1: first, 2: second, 3: third
-  const [categories, setCategories] = useState([
-    { value: "TV", label: "TV/Monitors" },
-    { value: "PC", label: "PC" },
-    { value: "GA", label: "Gaming/Console" },
-    { value: "PH", label: "Phones" },
-  ]);
+  const [categories, setCategories] = useState([]);
 
   const [subcategories, setSubcategories] = useState([]);
 
@@ -63,10 +58,31 @@ function ListItemsModel() {
     )
       .then((response) => {
         console.log("Product listed successfully", response);
-        // Close modals or show a success message
+        // Reset form
+        setProductTitle("");
+        setProductDescription("");
+        setProductImages([]);
+        setImagePreviews([]);
+        setQuantity("");
+        setPrice("");
+        setSelectedSubcategory("");
+        setSelectedBrand("");
+        setSubcategories([]);
+        
+        // Close modals
+        setCurrentModal(0);
+        
+        // Show success message
+        alert("Product listed successfully!");
+        
+        // Call callback to refresh product list
+        if (onProductCreated) {
+          onProductCreated();
+        }
       })
       .catch((error) => {
         console.error("Error listing product", error);
+        alert("Failed to list product. Please try again.");
       });
   };
 
@@ -97,25 +113,33 @@ function ListItemsModel() {
   const openModal = (modalNumber) => {
     //get the product categories(heirarchical category data)
     if (modalNumber === 1) {
-      localStorage.getItem("marketpulsetoken");
       axios.get(`${process.env.REACT_APP_BACKEND_API_URL}/product/getCat`)
         .then((response) => {
-          const fetchedCategories = response.data.categories;
-          // Assuming fetchedCategories is in the format: { "1": "Electronics", "2": "Mobile phones", ... }
-          const categoryOptions = fetchedCategories.map((category, key) => ({
+          const fetchedCategories = response.data.categories || [];
+          const categoryOptions = fetchedCategories.map((category) => ({
             value: category._id,
             label: category.name,
           }));
-
           // Update categories state with new options
           setCategories(categoryOptions);
         })
         .catch((err) => {
-          console.error("Error fetching profile data", err);
+          console.error("Error fetching categories", err);
         });
     }
     setCurrentModal(modalNumber);
   };
+
+  // Listen for custom event to open modal
+  useEffect(() => {
+    const handleOpenModal = () => {
+      openModal(1);
+    };
+    window.addEventListener('openListModal', handleOpenModal);
+    return () => {
+      window.removeEventListener('openListModal', handleOpenModal);
+    };
+  }, []);
 
   // Handle closing modals
   const closeModal = () => {
@@ -124,20 +148,22 @@ function ListItemsModel() {
 
   return (
     <div>
-      <div className="flex justify-center items-center flex-col text-center mt-10 min-h-72">
-        <h2 className="text-2xl font-bold">My Store is Empty</h2>
-        <p>There are no items listed.</p>
-        <button
-          onClick={() => openModal(1)}
-          data-modal-target="crud-modal"
-          data-modal-toggle="crud-modal"
-          className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
-        font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          type="button"
-        >
-          List an item
-        </button>
-      </div>
+      {showEmptyState && (
+        <div className="flex justify-center items-center flex-col text-center mt-10 min-h-72">
+          <h2 className="text-2xl font-bold">My Store is Empty</h2>
+          <p>There are no items listed.</p>
+          <button
+            onClick={() => openModal(1)}
+            data-modal-target="crud-modal"
+            data-modal-toggle="crud-modal"
+            className="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
+          font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            type="button"
+          >
+            List an item
+          </button>
+        </div>
+      )}
       {/* ///////////////////////////////////first model */}
       {currentModal === 1 && (
         <div className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden flex items-center justify-center">
