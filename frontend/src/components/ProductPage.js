@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { CartContext } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -13,6 +14,7 @@ function ProductPage() {
 
     //get userId using useContext
     const { userId } = useContext(UserContext);
+    const { refreshCart } = useContext(CartContext);
     const navigate = useNavigate();
     const toast = useToast();
     console.log("user id is (from useContext), ", userId);
@@ -43,6 +45,8 @@ function ProductPage() {
         );
         if (response.status === 201 || response.status === 200) {
           toast.success("Item added to cart successfully!");
+          // Refresh cart count in header
+          refreshCart();
         } else {
           toast.error("Failed to add item to cart.");
         }

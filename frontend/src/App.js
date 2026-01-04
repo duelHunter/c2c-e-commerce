@@ -12,6 +12,7 @@ import ProductPage from "./components/ProductPage";
 import HeaderFooterLayout from "./components/HeaderFooterLayout";
 import EmptyLayout from "./components/EmptyLayout";
 import UserProvider from "./context/UserContext";
+import CartProvider from "./context/CartContext";
 import { ToastProvider } from "./context/ToastContext";
 import ToastContainer from "./components/Toast";
 import CheckoutForm from "./components/CheckoutForm"; 
@@ -26,10 +27,11 @@ const totalPrice = 989;
 const App = () => {
   return (
     <UserProvider>
-      <ToastProvider>
-        <Router>
-          <ToastContainer />
-          <Routes>
+      <CartProvider>
+        <ToastProvider>
+          <Router>
+            <ToastContainer />
+            <Routes>
           {/* EmptyLayout for pages without header and footer */}
           <Route path="/" element={<EmptyLayout />}>
             <Route path="/signup" element={<Signup />} />
@@ -82,6 +84,7 @@ const App = () => {
         </Routes>
       </Router>
       </ToastProvider>
+      </CartProvider>
     </UserProvider>
   );
 };

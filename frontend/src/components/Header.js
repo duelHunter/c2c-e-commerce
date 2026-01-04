@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 
 import { UserContext } from "../context/UserContext";
+import { CartContext } from "../context/CartContext";
 
 import { NavLink, Link } from "react-router-dom";
 import { BsSearch } from "react-icons/bs";
@@ -14,6 +15,7 @@ import menu from "../images/menu.svg";
 
 function Header() {
   const { setUserId } = useContext(UserContext);
+  const { cartCount } = useContext(CartContext);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -120,7 +122,11 @@ function Header() {
               </a>  
               <Link to={'/cart'} className="flex items-center hover:text-gray-300 transition-colors relative">
                 <img src={cart} alt="Cart" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-1.5 py-0.5 rounded-full font-semibold">0</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-1.5 py-0.5 rounded-full font-semibold min-w-[20px] text-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
                 <span className="ml-1 sm:ml-2 text-xs sm:text-sm hidden sm:inline">Cart</span>
               </Link>
             </div>

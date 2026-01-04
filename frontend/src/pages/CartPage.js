@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { CartContext } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function CartPage() {
   const { userId } = useContext(UserContext);
+  const { updateCart } = useContext(CartContext);
   const navigate = useNavigate();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
@@ -39,8 +41,11 @@ function CartPage() {
         `${process.env.REACT_APP_BACKEND_API_URL}/cart/getCart/${userId}`
       );
       if (response.data.success) {
-        setCart(response.data.cart || { products: [] });
-        calculatePrices(response.data.cart?.products || []);
+        const cartData = response.data.cart || { products: [] };
+        setCart(cartData);
+        calculatePrices(cartData?.products || []);
+        // Update cart context
+        updateCart(cartData);
       } else {
         setError(response.data.message || "Failed to fetch cart");
       }
@@ -48,7 +53,9 @@ function CartPage() {
       console.error("Error fetching cart:", err);
       // If cart not found (404), show empty cart instead of error
       if (err.response?.status === 404) {
-        setCart({ products: [] });
+        const emptyCart = { products: [] };
+        setCart(emptyCart);
+        updateCart(emptyCart);
         setError("");
       } else {
         setError("Failed to fetch cart details. Please try again.");
@@ -123,8 +130,11 @@ function CartPage() {
       );
 
       if (response.data.success) {
-        setCart(response.data.cart || { products: [] });
-        calculatePrices(response.data.cart?.products || []);
+        const cartData = response.data.cart || { products: [] };
+        setCart(cartData);
+        calculatePrices(cartData?.products || []);
+        // Update cart context
+        updateCart(cartData);
         // Don't show success toast for every increment/decrement to avoid spam
         // toast.success("Cart item updated successfully");
       } else {
@@ -161,8 +171,11 @@ function CartPage() {
       );
 
       if (response.data.success) {
-        setCart(response.data.cart);
-        calculatePrices(response.data.cart.products);
+        const cartData = response.data.cart || { products: [] };
+        setCart(cartData);
+        calculatePrices(cartData.products || []);
+        // Update cart context
+        updateCart(cartData);
         toast.success(response.data.message || "Item removed from cart");
       } else {
         toast.error(response.data.message || "Failed to remove item");
