@@ -157,7 +157,6 @@ function Header() {
             <div className="hidden md:flex space-x-4 lg:space-x-6">
               <NavLink to={"/"} className="hover:text-gray-300 transition-colors text-sm lg:text-base">HOME</NavLink>
               <NavLink to={"/store"} className="hover:text-gray-300 transition-colors text-sm lg:text-base">OUR STORE</NavLink>
-              <NavLink to={"/blog"} className="hover:text-gray-300 transition-colors text-sm lg:text-base">BLOGS</NavLink>
               <NavLink to={"/contact"} className="hover:text-gray-300 transition-colors text-sm lg:text-base">CONTACT</NavLink>
             </div>
             
@@ -194,13 +193,6 @@ function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   OUR STORE
-                </NavLink>
-                <NavLink 
-                  to={"/blog"} 
-                  className="hover:text-gray-300 transition-colors text-sm py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  BLOGS
                 </NavLink>
                 <NavLink 
                   to={"/contact"} 

@@ -15,12 +15,13 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
 
   //store the form data to variables
   const [imagePreviews, setImagePreviews] = useState([]);
-  // const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [productTitle, setProductTitle] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [productImages, setProductImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
 
@@ -85,8 +86,10 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
       setProductDescription("");
       setProductImages([]);
       setImagePreviews([]);
+      setExistingImages([]);
       setQuantity("");
       setPrice("");
+      setSelectedCategory("");
       setSelectedSubcategory("");
       setSelectedBrand("");
       setSubcategories([]);
@@ -112,24 +115,29 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
   // Function to handle category selection and fetch subcategories
   const handleCategoryChange = (e) => {
     const selectedValue = e.target.value;
-    // setSelectedCategory(selectedValue);
+    setSelectedCategory(selectedValue);
+    setSelectedSubcategory(""); // Reset subcategory when category changes
 
-    axios
-      .get(
-        `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${selectedValue}`
-      )
-      .then((response) => {
-        const fetchedSubcategories = response.data.subCategories;
-        console.log(fetchedSubcategories);
-        const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
-          value: subcategory._id,
-          label: subcategory.name,
-        }));
-        setSubcategories(subcategoryOptions);
-      })
-      .catch((err) => {
-        console.error("Error fetching subcategories", err);
-      });
+    if (selectedValue) {
+      axios
+        .get(
+          `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${selectedValue}`
+        )
+        .then((response) => {
+          const fetchedSubcategories = response.data.subCategories;
+          console.log(fetchedSubcategories);
+          const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+            value: subcategory._id,
+            label: subcategory.name,
+          }));
+          setSubcategories(subcategoryOptions);
+        })
+        .catch((err) => {
+          console.error("Error fetching subcategories", err);
+        });
+    } else {
+      setSubcategories([]);
+    }
   };
 
   // Handle opening modals
@@ -156,8 +164,20 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
   // Listen for custom event to open modal
   useEffect(() => {
     const handleOpenModal = () => {
+      // Reset form for new product
       setIsEditMode(false);
       setEditingProduct(null);
+      setProductTitle("");
+      setProductDescription("");
+      setProductImages([]);
+      setImagePreviews([]);
+      setExistingImages([]);
+      setQuantity("");
+      setPrice("");
+      setSelectedCategory("");
+      setSelectedSubcategory("");
+      setSelectedBrand("");
+      setSubcategories([]);
       openModal(1);
     };
     
@@ -171,8 +191,20 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
       setProductDescription(product.description || "");
       setQuantity(product.quantity?.toString() || "");
       setPrice(product.price?.toString() || "");
+      
+      // Handle existing images
+      if (product.images && product.images.length > 0) {
+        const imageUrls = product.images.map(img => 
+          img.url ? `${process.env.REACT_APP_UPLOADS}${img.url}` : null
+        ).filter(Boolean);
+        setExistingImages(imageUrls);
+        setImagePreviews([]); // Clear new image previews
+      } else {
+        setExistingImages([]);
+        setImagePreviews([]);
+      }
+      
       const categoryId = product.category?._id || product.category || "";
-      setSelectedSubcategory(categoryId);
       
       // Load categories first
       try {
@@ -184,17 +216,61 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
         }));
         setCategories(categoryOptions);
         
-        // If product has a category, load its subcategories
+        // If product has a category, find parent category and load subcategories
         if (categoryId) {
-          const subcategoriesResponse = await axios.get(
-            `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${categoryId}`
-          );
-          const fetchedSubcategories = subcategoriesResponse.data.subCategories || [];
-          const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
-            value: subcategory._id,
-            label: subcategory.name,
-          }));
-          setSubcategories(subcategoryOptions);
+          let parentCategoryId = null;
+          
+          // Check if categoryId is actually a parent category first
+          const isParentCategory = fetchedCategories.some(cat => cat._id === categoryId);
+          
+          if (isParentCategory) {
+            parentCategoryId = categoryId;
+            setSelectedCategory(categoryId);
+            setSelectedSubcategory(""); // If it's a parent, no subcategory
+          } else {
+            // It's likely a subcategory, need to find parent by checking each category's subcategories
+            for (const category of fetchedCategories) {
+              try {
+                const subcategoriesResponse = await axios.get(
+                  `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${category._id}`
+                );
+                const fetchedSubcategories = subcategoriesResponse.data.subCategories || [];
+                const foundSubcategory = fetchedSubcategories.find(sub => sub._id === categoryId);
+                if (foundSubcategory) {
+                  parentCategoryId = category._id;
+                  setSelectedCategory(category._id);
+                  setSelectedSubcategory(categoryId);
+                  // Load subcategories for this parent
+                  const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+                    value: subcategory._id,
+                    label: subcategory.name,
+                  }));
+                  setSubcategories(subcategoryOptions);
+                  break;
+                }
+              } catch (err) {
+                // Continue to next category
+                console.error(`Error fetching subcategories for category ${category._id}:`, err);
+              }
+            }
+          }
+          
+          // If we found a parent category but haven't loaded subcategories yet, load them
+          if (parentCategoryId && subcategories.length === 0) {
+            try {
+              const subcategoriesResponse = await axios.get(
+                `${process.env.REACT_APP_BACKEND_API_URL}/product/getSubCat?category=${parentCategoryId}`
+              );
+              const fetchedSubcategories = subcategoriesResponse.data.subCategories || [];
+              const subcategoryOptions = fetchedSubcategories.map((subcategory) => ({
+                value: subcategory._id,
+                label: subcategory.name,
+              }));
+              setSubcategories(subcategoryOptions);
+            } catch (err) {
+              console.error("Error loading subcategories:", err);
+            }
+          }
         }
       } catch (err) {
         console.error("Error loading categories for edit:", err);
@@ -281,6 +357,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                     </label>
                     <select
                       id="product-category"
+                      value={selectedCategory}
                       onChange={handleCategoryChange}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
@@ -303,10 +380,12 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                     </label>
                     <select
                       id="product-subcategory"
+                      value={selectedSubcategory}
                       onChange={(e) => setSelectedSubcategory(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
                         dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      disabled={!selectedCategory}
                     >
                       <option value="">Select subcategory</option>
                       {subcategories.map((subcategory, index) => (
@@ -314,7 +393,6 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                           {subcategory.label}
                         </option>
                       ))}
-                      {/* Add subcategories based on the selected category */}
                     </select>
                   </div>
                   <div>
@@ -326,6 +404,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                     </label>
                     <select
                       id="product-brand"
+                      value={selectedBrand}
                       onChange={(e) => setSelectedBrand(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 
                         focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
@@ -399,6 +478,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                       type="text"
                       name="name"
                       id="name"
+                      value={productTitle}
                       onChange={(e) => setProductTitle(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
              focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
@@ -416,6 +496,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                     </label>
                     <textarea
                       id="description"
+                      value={productDescription}
                       onChange={(e) => setProductDescription(e.target.value)}
                       rows="3"
                       className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300
@@ -465,17 +546,46 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                       />
                     </label>
 
-                    {/* Preview of selected images */}
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      {imagePreviews.map((imageURL, index) => (
-                        <img
-                          key={index}
-                          src={imageURL}
-                          alt={`Preview ${index}`}
-                          className="w-full h-32 object-cover rounded"
-                        />
-                      ))}
-                    </div>
+                    {/* Preview of existing images (when editing) */}
+                    {existingImages.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Existing Images:</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          {existingImages.map((imageURL, index) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={imageURL}
+                                alt={`Existing ${index}`}
+                                className="w-full h-32 object-cover rounded"
+                              />
+                              <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                Current
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          Upload new images to add to existing ones
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Preview of newly selected images */}
+                    {imagePreviews.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">New Images:</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          {imagePreviews.map((imageURL, index) => (
+                            <img
+                              key={index}
+                              src={imageURL}
+                              alt={`Preview ${index}`}
+                              className="w-full h-32 object-cover rounded"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-between mt-6">
@@ -558,6 +668,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                         type="text"
                         name="name"
                         id="name"
+                        value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
                   focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
@@ -577,6 +688,7 @@ function ListItemsModel({ onProductCreated, showEmptyState = true }) {
                         type="number"
                         name="price"
                         id="price"
+                        value={price}
                         onChange={(e) => setPrice(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 
                   focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400

@@ -81,7 +81,6 @@ function Footer() {
             <Link to="/refund-policy" className="block py-2 hover:text-gray-300">Refund Policy</Link>
             <Link to="/shipping-policy" className="block py-2 hover:text-gray-300">Shipping Policy</Link>
             <Link to="/terms-of-service" className="block py-2 hover:text-gray-300">Terms of Service</Link>
-            <Link to="/blogs" className="block py-2 hover:text-gray-300">Blogs</Link>
           </div>
           <div>
             <h4 className="text-xl mb-4">Account</h4>
