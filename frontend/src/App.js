@@ -4,6 +4,7 @@ import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
+import WishlistPage from "./pages/WishlistPage";
 import Profile from "./pages/Profile";
 import Signup from "./pages/SignUp";
 import Login from "./pages/Login";
@@ -62,6 +63,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <MyStore />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
                 </ProtectedRoute>
               }
             />
