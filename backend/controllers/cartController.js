@@ -97,6 +97,15 @@ exports.getCart = async (req, res) => {
 exports.updateCartItem = async (req, res) => {
   const { userId, productId, count } = req.body;
   console.log("userid and productid and count is ",userId, productId, count);
+  
+  // Validate input
+  if (!userId || !productId || count === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields: userId, productId, or count"
+    });
+  }
+
   try {
     const cart = await Cart.findOne({ orderby: userId });
     if (!cart) {
@@ -106,12 +115,19 @@ exports.updateCartItem = async (req, res) => {
       });
     }
 
+    // Convert productId to string for comparison
+    const productIdStr = productId.toString();
+
     // Find the product in the cart
     const productIndex = cart.products.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => {
+        const itemProductId = item.product.toString ? item.product.toString() : item.product;
+        return itemProductId === productIdStr;
+      }
     );
 
     if (productIndex === -1) {
+      console.log("Product not found in cart. Cart products:", cart.products.map(p => ({ id: p.product.toString(), count: p.count })));
       return res.status(404).json({
         success: false,
         message: "Product not found in the cart"
@@ -129,7 +145,7 @@ exports.updateCartItem = async (req, res) => {
     await cart.save();
     
     // Populate product details before sending response
-    const populatedCart = await Cart.findOne({ orderby: userId }).populate({
+    await cart.populate({
       path: 'products.product',
       model: 'Product',
       select: 'title price images description',
@@ -138,7 +154,7 @@ exports.updateCartItem = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Cart item updated successfully",
-      cart: populatedCart
+      cart
     });
   } catch (error) {
     return res.status(500).json({
