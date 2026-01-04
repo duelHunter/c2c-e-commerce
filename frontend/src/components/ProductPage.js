@@ -10,6 +10,7 @@ function ProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
 
     //get userId using useContext
@@ -71,6 +72,7 @@ function ProductPage() {
         );
         console.log(response);
         setProduct(response.data.product);
+        setSelectedImageIndex(0); // Reset to first image when product changes
         setLoading(false);
       } catch (err) {
         console.error("Error fetching product:", err);
@@ -88,35 +90,76 @@ function ProductPage() {
   if (!product) return <div>Product not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8">
-      <section class="py-8 bg-white md:py-16 dark:bg-gray-900 antialiased">
-        <div class="max-w-screen-xl px-4 mx-auto 2xl:px-0">
-          <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
-            <div class="shrink-0 max-w-md lg:max-w-lg mx-auto">
-              <img
-                class="w-full dark:hidden"
-                src={
-                  product.images && product.images.length > 0 && product.images[0]?.url
-                    ? `${process.env.REACT_APP_UPLOADS}${product.images[0].url}`
-                    : "/placeholder-image.png"
-                }
-                alt={product.title || "Product Image"}
-              />
+    <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <section className="py-8 bg-white md:py-16 dark:bg-gray-900 antialiased">
+        <div className="max-w-screen-xl px-4 mx-auto 2xl:px-0">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
+            <div className="shrink-0 max-w-md lg:max-w-lg mx-auto">
+              {/* Main Product Image */}
+              <div className="mb-4 aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+                <img
+                  className="h-full w-full object-contain p-4 dark:hidden"
+                  src={
+                    product.images && product.images.length > 0 && product.images[selectedImageIndex]?.url
+                      ? `${process.env.REACT_APP_UPLOADS}${product.images[selectedImageIndex].url}`
+                      : "/placeholder-image.png"
+                  }
+                  alt={product.title || "Product"}
+                />
+                <img
+                  className="hidden h-full w-full object-contain p-4 dark:block"
+                  src={
+                    product.images && product.images.length > 0 && product.images[selectedImageIndex]?.url
+                      ? `${process.env.REACT_APP_UPLOADS}${product.images[selectedImageIndex].url}`
+                      : "/placeholder-image.png"
+                  }
+                  alt={product.title || "Product"}
+                />
+              </div>
+
+              {/* Image Gallery Thumbnails */}
+              {product.images && product.images.length > 1 && (
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`flex-shrink-0 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 overflow-hidden rounded-lg border-2 transition-all cursor-pointer ${
+                        selectedImageIndex === index
+                          ? "border-primary-600 dark:border-primary-500 ring-2 ring-primary-200 dark:ring-primary-800"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      }`}
+                      aria-label={`View image ${index + 1}`}
+                    >
+                      <img
+                        className="h-full w-full object-cover"
+                        src={
+                          image?.url
+                            ? `${process.env.REACT_APP_UPLOADS}${image.url}`
+                            : "/placeholder-image.png"
+                        }
+                        alt={`${product.title} - View ${index + 1}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div class="mt-6 sm:mt-8 lg:mt-0">
-              <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">
+            <div className="mt-6 sm:mt-8 lg:mt-0">
+              <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">
                 {product.title}
               </h1>
-              <div class="mt-4 sm:items-center sm:gap-4 sm:flex">
-                <p class="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white">
+              <div className="mt-4 sm:items-center sm:gap-4 sm:flex">
+                <p className="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white">
                     Rs.{product.price}
                 </p>
 
-                <div class="flex items-center gap-2 mt-2 sm:mt-0">
-                  <div class="flex items-center gap-1">
+                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                  <div className="flex items-center gap-1">
                     <svg
-                      class="w-4 h-4 text-yellow-300"
+                      className="w-4 h-4 text-yellow-300"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -127,7 +170,7 @@ function ProductPage() {
                       <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z" />
                     </svg>
                     <svg
-                      class="w-4 h-4 text-yellow-300"
+                      className="w-4 h-4 text-yellow-300"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -138,7 +181,7 @@ function ProductPage() {
                       <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z" />
                     </svg>
                     <svg
-                      class="w-4 h-4 text-yellow-300"
+                      className="w-4 h-4 text-yellow-300"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -149,7 +192,7 @@ function ProductPage() {
                       <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z" />
                     </svg>
                     <svg
-                      class="w-4 h-4 text-yellow-300"
+                      className="w-4 h-4 text-yellow-300"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -160,7 +203,7 @@ function ProductPage() {
                       <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z" />
                     </svg>
                     <svg
-                      class="w-4 h-4 text-yellow-300"
+                      className="w-4 h-4 text-yellow-300"
                       aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -171,27 +214,27 @@ function ProductPage() {
                       <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z" />
                     </svg>
                   </div>
-                  <p class="text-sm font-medium leading-none text-gray-500 dark:text-gray-400">
+                  <p className="text-sm font-medium leading-none text-gray-500 dark:text-gray-400">
                     (5.0)
                   </p>
                   <a
                     href="#"
-                    class="text-sm font-medium leading-none text-gray-900 underline hover:no-underline dark:text-white"
+                    className="text-sm font-medium leading-none text-gray-900 underline hover:no-underline dark:text-white"
                   >
                     345 Reviews
                   </a>
                 </div>
               </div>
 
-              <div class="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
+              <div className="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
                 <a
                   href="#"
                   title=""
-                  class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                  className="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                   role="button"
                 >
                   <svg
-                    class="w-5 h-5 -ms-2 me-2"
+                    className="w-5 h-5 -ms-2 me-2"
                     aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -211,14 +254,14 @@ function ProductPage() {
                 </a>
 
                 <button
-                  class="text-white mt-4 sm:mt-0 bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 flex items-center justify-center"
+                  className="text-white mt-4 sm:mt-0 bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 flex items-center justify-center"
                   onClick={(e) => {
                     e.preventDefault();
                     handleAddToCart();
                   }}
                 >
                   <svg
-                    class="w-5 h-5 -ms-2 me-2"
+                    className="w-5 h-5 -ms-2 me-2"
                     aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -238,9 +281,9 @@ function ProductPage() {
                 </button>
               </div>
 
-              <hr class="my-6 md:my-8 border-gray-200 dark:border-gray-800" />
+              <hr className="my-6 md:my-8 border-gray-200 dark:border-gray-800" />
 
-              <p class="mb-6 text-gray-500 dark:text-gray-400">
+              <p className="mb-6 text-gray-500 dark:text-gray-400">
                 {product.description}
               </p>
             </div>
